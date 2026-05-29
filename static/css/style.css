@@ -547,7 +547,12 @@ p { color: var(--text-muted); line-height: 1.8; }
   background: var(--bg3);
   display: grid;
   place-items: center;
-  font-size: 3rem;
+  font-family: var(--font-head);
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
   position: relative;
   overflow: hidden;
 }

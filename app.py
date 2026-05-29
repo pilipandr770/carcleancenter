@@ -319,7 +319,7 @@ def get_daily_inspiration(db):
     used_urls = {
         row['source_url'] for row in db_execute(
             db,
-            f'SELECT source_url FROM {posts_table} WHERE source_url IS NOT NULL AND source_url != ""'
+            f"SELECT source_url FROM {posts_table} WHERE source_url IS NOT NULL AND source_url != ''"
         ).fetchall()
     }
 
