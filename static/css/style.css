@@ -1057,11 +1057,10 @@ select.form-control { cursor: pointer; }
     padding: 24px;
     gap: 4px;
     border-bottom: 1px solid var(--border);
-    transform: translateY(-110%);
-    transition: transform 0.3s ease;
+    display: none;
     z-index: 99;
   }
-  .nav-menu.open { transform: translateY(0); }
+  .nav-menu.open { display: flex; }
   .nav-toggle { display: flex; }
   .nav-link { padding: 14px 20px; width: 100%; text-align: left; }
 
