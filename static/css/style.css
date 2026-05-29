@@ -532,7 +532,7 @@ p { color: var(--text-muted); line-height: 1.8; }
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow: clip;
   transition: all var(--transition);
   display: flex;
   flex-direction: column;
@@ -542,22 +542,7 @@ p { color: var(--text-muted); line-height: 1.8; }
   transform: translateY(-4px);
   box-shadow: 0 16px 40px rgba(0,0,0,0.4);
 }
-.blog-card-img {
-  height: 200px;
-  background: var(--bg3);
-  display: grid;
-  place-items: center;
-  font-family: var(--font-head);
-  font-size: 0.9rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  position: relative;
-  overflow: hidden;
-}
-.blog-card-img img { width: 100%; height: 100%; object-fit: cover; }
-.blog-card-body { padding: 24px; flex: 1; display: flex; flex-direction: column; }
+.blog-card-body { padding: 22px 22px 24px; flex: 1; display: flex; flex-direction: column; }
 .blog-card-meta {
   display: flex;
   align-items: center;
@@ -1096,4 +1081,48 @@ select.form-control { cursor: pointer; }
   .cookie-actions { width: 100%; }
   .cookie-actions .btn { flex: 1; justify-content: center; }
   .consent-option { flex-direction: column; align-items: flex-start; }
+
+  /* Price table: stack each row on mobile so the price column never collapses */
+  .price-table thead {
+    display: none;
+  }
+  .price-table,
+  .price-table tbody,
+  .price-table tr,
+  .price-table td {
+    display: block;
+    width: 100%;
+  }
+  .price-table tr {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .price-table tr:last-child {
+    border-bottom: none;
+  }
+  .price-table td {
+    padding: 0;
+    border: none;
+  }
+  .price-table td + td {
+    margin-top: 8px;
+  }
+  .price-table td:first-child {
+    font-size: 1rem;
+  }
+  .price-table td:nth-child(2) {
+    font-size: 0.92rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .price-table td:last-child {
+    margin-top: 10px;
+    font-size: 1.05rem;
+    letter-spacing: 0.01em;
+    color: var(--gold);
+    white-space: nowrap;
+  }
+  .price-section-header {
+    padding: 16px 18px;
+  }
 }

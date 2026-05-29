@@ -344,7 +344,81 @@ def get_daily_inspiration(db):
     return candidates[-1]
 
 
-def build_blog_prompt(topic: str, source: dict | None = None) -> str:
+GERMAN_STOPWORDS = {
+    'der', 'die', 'das', 'den', 'dem', 'des', 'und', 'oder', 'mit', 'fuer', 'für', 'von',
+    'im', 'in', 'am', 'an', 'auf', 'zu', 'zum', 'zur', 'bei', 'aus', 'ist', 'sind', 'ein',
+    'eine', 'einer', 'einem', 'einen', 'als', 'was', 'wie', 'wann', 'warum', 'ihr', 'ihre',
+    'auto', 'car', 'clean', 'center', 'ruesselsheim', 'russelsheim', 'ruesselsheim', 'main',
+}
+
+
+def _topic_tokens(text: str) -> set[str]:
+    words = re.sub(r'[^a-z0-9äöüß ]+', ' ', (text or '').lower()).split()
+    return {w for w in words if len(w) > 2 and w not in GERMAN_STOPWORDS}
+
+
+def topic_similarity(a: str, b: str) -> float:
+    a_tokens = _topic_tokens(a)
+    b_tokens = _topic_tokens(b)
+    if not a_tokens or not b_tokens:
+        return 0.0
+    inter = len(a_tokens & b_tokens)
+    union = len(a_tokens | b_tokens)
+    return inter / union if union else 0.0
+
+
+def is_too_similar_topic(candidate: str, existing_titles: list[str], threshold: float = 0.58) -> bool:
+    for existing in existing_titles:
+        if topic_similarity(candidate, existing) >= threshold:
+            return True
+    return False
+
+
+def select_daily_inspiration(db, existing_titles: list[str]) -> dict | None:
+    posts_table = table_name('blog_posts')
+    used_urls = {
+        row['source_url'] for row in db_execute(
+            db,
+            f"SELECT source_url FROM {posts_table} WHERE source_url IS NOT NULL AND source_url != ''"
+        ).fetchall()
+    }
+
+    candidates = []
+    for feed in RSS_FEEDS:
+        try:
+            for entry in fetch_rss_entries(feed['url'])[:10]:
+                if entry['link'] in used_urls:
+                    continue
+                candidates.append({
+                    'source_feed': feed['name'],
+                    'source_feed_url': feed['url'],
+                    **entry,
+                })
+        except Exception:
+            continue
+
+    if not candidates:
+        return None
+
+    candidates.sort(key=lambda item: (item['published_at'], item['source_feed']), reverse=True)
+    for item in candidates:
+        if not is_too_similar_topic(item['title'], existing_titles):
+            return item
+    return candidates[0]
+
+
+def build_blog_prompt(topic: str, source: dict | None = None, recent_titles: list[str] | None = None) -> str:
+    avoid_titles = ''
+    if recent_titles:
+        preview = '\n'.join(f'- {t}' for t in recent_titles[:8])
+        avoid_titles = f"""
+
+WICHTIG ZUR DEDUPLIKATION:
+- Vermeide einen Titel oder Blickwinkel, der zu nah an folgenden bestehenden Artikeln ist:
+{preview}
+- Waehle einen klar unterscheidbaren Fokus, Nutzen oder Problemfall.
+"""
+
     if source:
         source_categories = ', '.join(source.get('categories') or [])
         return f"""Du bist ein SEO-Experte und Content-Writer für ein Autopflege-Unternehmen.
@@ -358,6 +432,7 @@ WICHTIG:
 - Baue immer einen lokalen Kontext für Rüsselsheim am Main, Frankfurt am Main und Rhein-Main ein, wenn es sinnvoll ist.
 - Verlinke im Text mindestens einmal intern auf /leistungen/ und /kontakt/.
 - Füge am Ende einen FAQ-Block mit 4-6 Fragen und Antworten ein, der als JSON-Feld separat zurückgegeben wird.
+{avoid_titles}
 
 Quelle:
 - Feed: {source['source_feed']}
@@ -397,6 +472,7 @@ Zusätzliche Anforderungen:
 - Nenne im Text mindestens einmal die Begriffe Autopflege Rüsselsheim, Fahrzeugaufbereitung, Lackpflege und Keramikversiegelung.
 - Verlinke intern auf /leistungen/ und /kontakt/.
 - Füge am Ende einen FAQ-Block mit 4-6 Fragen und Antworten ein, der als JSON-Feld separat zurückgegeben wird.
+{avoid_titles}
 
 JSON-Format (exakt so):
 {{
@@ -417,11 +493,11 @@ JSON-Format (exakt so):
 # ──────────────────────────────────────────────
 # BLOG GENERATION
 # ──────────────────────────────────────────────
-def generate_blog_post(topic: str, source: dict | None = None) -> dict:
+def generate_blog_post(topic: str, source: dict | None = None, recent_titles: list[str] | None = None) -> dict:
     import anthropic
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
-    prompt = build_blog_prompt(topic, source)
+    prompt = build_blog_prompt(topic, source, recent_titles=recent_titles)
 
     message = client.messages.create(
         model="claude-haiku-4-5",
@@ -601,11 +677,19 @@ def build_and_store_blog_post(topic: str | None = None) -> dict:
     requested_topic = (topic or '').strip()
     source = None
     if not requested_topic:
-        source = get_daily_inspiration(db)
+        source = select_daily_inspiration(db, existing)
+
+    if requested_topic and is_too_similar_topic(requested_topic, existing):
+        raise RuntimeError('Thema ist zu nah an einem bestehenden Artikel. Bitte Thema konkreter oder mit anderem Fokus formulieren.')
 
     selected_topic = requested_topic or (source['title'] if source else random.choice(unused) if unused else random.choice(BLOG_TOPICS))
 
-    post_data = generate_blog_post(selected_topic, source=source)
+    post_data = generate_blog_post(selected_topic, source=source, recent_titles=existing[:12])
+    if is_too_similar_topic(post_data.get('title', ''), existing):
+        if requested_topic:
+            raise RuntimeError('Generierter Titel ist zu aehnlich zu einem bestehenden Beitrag. Bitte ein genaueres Thema angeben.')
+        retry_topic = f"{selected_topic} - neue Perspektive fuer andere Fahrzeugtypen oder Jahreszeit"
+        post_data = generate_blog_post(retry_topic, source=source, recent_titles=existing[:12])
     slug = slugify(post_data['title'])
     base = slug
     i = 1
@@ -667,9 +751,20 @@ def admin_dashboard():
     if not admin_is_authenticated():
         return redirect(url_for('admin_login'))
 
+    db = get_db()
+    posts_table = table_name('blog_posts')
+    posts = db_execute(
+        db,
+        f'''SELECT id, title, slug, created_at, source_feed, source_url
+            FROM {posts_table}
+            ORDER BY created_at DESC
+            LIMIT 50'''
+    ).fetchall()
+
     return render_template(
         'admin_dashboard.html',
         business=BUSINESS,
+        posts=posts,
         result=None,
         error=None,
         page_title='Admin Dashboard | Car Clean Center',
@@ -691,15 +786,38 @@ def admin_generate_blog():
     except Exception as e:
         error = str(e)
 
+    db = get_db()
+    posts_table = table_name('blog_posts')
+    posts = db_execute(
+        db,
+        f'''SELECT id, title, slug, created_at, source_feed, source_url
+            FROM {posts_table}
+            ORDER BY created_at DESC
+            LIMIT 50'''
+    ).fetchall()
+
     return render_template(
         'admin_dashboard.html',
         business=BUSINESS,
+        posts=posts,
         result=result,
         error=error,
         page_title='Admin Dashboard | Car Clean Center',
         page_desc='Interne Blog-Verwaltung',
         canonical='/admin/dashboard/'
     )
+
+
+@app.route('/admin/delete/<int:post_id>/', methods=['POST'])
+def admin_delete_post(post_id):
+    if not admin_is_authenticated():
+        return redirect(url_for('admin_login'))
+
+    db = get_db()
+    posts_table = table_name('blog_posts')
+    db_execute(db, f'DELETE FROM {posts_table} WHERE id=?', (post_id,))
+    db.commit()
+    return redirect(url_for('admin_dashboard'))
 
 
 @app.route('/admin/logout/', methods=['POST'])
