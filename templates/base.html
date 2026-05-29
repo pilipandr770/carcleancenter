@@ -109,6 +109,7 @@
     <nav class="nav-container">
       <a class="nav-logo" href="/" aria-label="Car Clean Center Rüsselsheim">
         <img src="{{ business.logo }}" alt="Car Clean Center Logo" width="160" height="50" loading="eager">
+        <span class="nav-logo-text">Car Clean Center</span>
       </a>
 
       <button class="nav-toggle" id="navToggle" aria-label="Menü öffnen" aria-expanded="false">
@@ -122,9 +123,6 @@
         <li><a href="/galerie/" class="nav-link {% if '/galerie' in canonical %}active{% endif %}">Galerie</a></li>
         <li><a href="/blog/" class="nav-link {% if '/blog' in canonical %}active{% endif %}">Blog</a></li>
         <li><a href="/faq/" class="nav-link {% if '/faq' in canonical %}active{% endif %}">FAQ</a></li>
-        <li>
-          <a href="/kontakt/" class="nav-cta">Termin buchen</a>
-        </li>
       </ul>
     </nav>
   </header>
