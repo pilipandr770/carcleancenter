@@ -73,7 +73,7 @@ BUSINESS = {
     'maps': 'https://g.co/kgs/cdB5F9s',
     'maps_embed': 'https://maps.google.com/maps?q=Uranstrasse+8+65428+Rüsselsheim&output=embed',
     'hours': 'Mo–Sa nach Vereinbarung',
-    'logo': f'{BASE_URL}/static/img/logo-main.jpg',
+    'logo': 'https://carcleancenter.net/wp-content/uploads/2020/11/carcenterlogo.png',
     'owner': 'David Wainer',
     'founded': '2025',
     'base_url': BASE_URL,
