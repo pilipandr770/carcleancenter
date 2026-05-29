@@ -1075,25 +1075,6 @@ select.form-control { cursor: pointer; }
   .nav-toggle { display: flex; }
   .nav-link { padding: 14px 20px; width: 100%; text-align: left; }
 
-  .no-js .nav-menu {
-    position: static;
-    transform: none;
-    flex-direction: row;
-    overflow-x: auto;
-    white-space: nowrap;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    gap: 0;
-  }
-  .no-js .nav-link {
-    width: auto;
-    padding: 8px 12px;
-  }
-  .no-js .nav-toggle {
-    display: none;
-  }
-
   .hero-title { font-size: 2.4rem; }
   .services-grid { grid-template-columns: 1fr; }
   .blog-grid { grid-template-columns: 1fr; }

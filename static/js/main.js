@@ -1,9 +1,6 @@
 // Car Clean Center – Main JS
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.body.classList.remove('no-js');
-  document.body.classList.add('js-enabled');
-
   // ── CONSENT MANAGEMENT ──
   const CONSENT_KEY = 'ccc_cookie_consent_v1';
   const cookieBanner = document.getElementById('cookieBanner');
