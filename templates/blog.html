@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="page-hero">
+  <div class="container">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="breadcrumb-sep">›</span>
+      <span>Blog & Ratgeber</span>
+    </nav>
+    <span class="section-label">Expertenwissen</span>
+    <h1 class="section-title">Autopflege <span>Ratgeber</span></h1>
+    <p class="text-muted" style="max-width:560px;">
+      Tipps, Tricks und Expertenwissen rund um Autopflege, Fahrzeugaufbereitung und Lackpflege
+      vom Car Clean Center Rüsselsheim.
+    </p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    {% if posts %}
+    <div class="blog-grid">
+      {% for post in posts %}
+      <article class="blog-card" itemscope itemtype="https://schema.org/BlogPosting">
+        <div class="blog-card-img">🚗</div>
+        <div class="blog-card-body">
+          <div class="blog-card-meta">
+            <time itemprop="datePublished" datetime="{{ post.created_at[:10] }}">{{ post.created_at[:10] }}</time>
+            <span>·</span>
+            <span>{{ post.reading_time or 5 }} Min</span>
+          </div>
+          <h2 class="blog-card-title" itemprop="headline">
+            <a href="/blog/{{ post.slug }}/" style="color:inherit;">{{ post.title }}</a>
+          </h2>
+          <p class="blog-card-excerpt" itemprop="description">
+            {{ (post.excerpt or '')[:140] }}{% if (post.excerpt or '')|length > 140 %}…{% endif %}
+          </p>
+          <a href="/blog/{{ post.slug }}/" class="blog-card-link">Weiterlesen →</a>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">📝</div>
+      <h2 style="color:var(--text);margin-bottom:12px;">Bald verfügbar</h2>
+      <p>Wir bereiten spannende Artikel rund um Autopflege vor. Schauen Sie bald wieder rein!</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section-sm" style="background:var(--bg2);border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="cta-banner">
+      <div class="cta-banner-inner">
+        <div>
+          <h2 class="cta-title">Ihr Auto braucht professionelle Pflege?</h2>
+          <p class="cta-desc">Wir sind für Sie da – Termin einfach per Telefon oder WhatsApp.</p>
+        </div>
+        <div class="cta-actions">
+          <a href="/kontakt/" class="btn btn-red">Termin vereinbaren</a>
+          <a href="https://wa.me/491783640234" class="btn btn-wa" target="_blank" rel="noopener">WhatsApp</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <nav class="breadcrumb"><a href="/">Home</a><span class="breadcrumb-sep">›</span><span>Kontakt</span></nav>
+    <span class="section-label">Schreiben Sie uns</span>
+    <h1 class="section-title">Termin <span>vereinbaren</span></h1>
+    <p class="text-muted" style="max-width:520px;">
+      Rufen Sie uns an, schreiben Sie uns per WhatsApp oder nutzen Sie das Kontaktformular –
+      wir melden uns schnellstmöglich.
+    </p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="contact-grid">
+
+      <!-- Info -->
+      <div class="contact-info">
+
+        <div class="contact-card">
+          <p class="contact-card-title">📍 Besuchen Sie uns</p>
+          <div class="contact-item">
+            <span class="contact-item-icon">🏠</span>
+            <div>
+              <strong style="color:var(--text);font-size:0.95rem;">Car Clean Center Rüsselsheim</strong><br>
+              <span>Uranstrasse 8<br>65428 Rüsselsheim am Main</span>
+            </div>
+          </div>
+          <div class="map-frame consent-media" data-consent="external-media">
+            <div class="consent-media-placeholder">
+              <p>Google Maps wird erst nach Ihrer Einwilligung fuer externe Medien geladen.</p>
+              <button type="button" class="btn btn-outline btn-sm" data-consent-open>Cookie-Einstellungen</button>
+            </div>
+            <iframe
+              data-consent-src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2570!2d8.4095!3d49.9964!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDnCsDU5JzQ3LjAiTiA4wrAyNCczNC4yIkU!5e0!3m2!1sde!2sde!4v1"
+              allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+              title="Car Clean Center Rüsselsheim Standort">
+            </iframe>
+          </div>
+          <a href="{{ business.maps }}" target="_blank" rel="noopener" class="maps-link" style="margin-top:12px;">
+            📍 In Google Maps öffnen →
+          </a>
+          <a href="https://maps.app.goo.gl/izo2LgG3KRjFr1pa6?g_st=iw" target="_blank" rel="noopener" class="maps-link" style="margin-top:8px;display:block;">
+            ⭐ Google Bewertungen ansehen →
+          </a>
+        </div>
+
+        <div class="contact-card">
+          <p class="contact-card-title">📞 Direktkontakt</p>
+          <div class="contact-item">
+            <span class="contact-item-icon">📱</span>
+            <div>
+              <p style="margin:0;font-size:0.82rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;">Telefon</p>
+              <a href="tel:{{ business.phone }}" style="font-size:1.1rem;font-weight:700;color:var(--text);">{{ business.phone_display }}</a>
+            </div>
+          </div>
+          <div class="contact-item">
+            <span class="contact-item-icon">💬</span>
+            <div>
+              <p style="margin:0;font-size:0.82rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;">WhatsApp</p>
+              <a href="{{ business.whatsapp }}" target="_blank" rel="noopener" style="font-size:1rem;color:#25D366;font-weight:700;">Jetzt schreiben →</a>
+            </div>
+          </div>
+          <div class="contact-item">
+            <span class="contact-item-icon">✉️</span>
+            <div>
+              <p style="margin:0;font-size:0.82rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;">E-Mail</p>
+              <a href="mailto:{{ business.email }}" style="color:var(--text);">{{ business.email }}</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="contact-card">
+          <p class="contact-card-title">🕐 Öffnungszeiten</p>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:0.92rem;">
+              <span style="color:var(--text);">Montag – Samstag</span>
+              <span style="color:var(--gold);font-weight:600;">nach Vereinbarung</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:0.92rem;">
+              <span style="color:var(--text);">Sonntag</span>
+              <span style="color:var(--text-muted);">geschlossen</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Club card -->
+        <div class="cta-banner">
+          <h3 style="font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px;">🏆 Autowasch-Club</h3>
+          <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:16px;">
+            20% Rabatt auf alle Dienste + unbegrenztes Waschprogramm!
+          </p>
+          <a href="tel:{{ business.phone }}" class="btn btn-red btn-sm">Jetzt anrufen</a>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <div class="contact-form-wrap">
+        <h2 style="font-family:var(--font-head);font-size:1.4rem;font-weight:800;color:var(--text);margin-bottom:8px;">
+          Terminanfrage senden
+        </h2>
+        <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:28px;">
+          Füllen Sie das Formular aus – wir melden uns innerhalb von 24 Stunden.
+        </p>
+
+        <div id="formAlert" class="alert" style="display:none;"></div>
+
+        <form id="contactForm" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="name">Name *</label>
+              <input type="text" id="name" name="name" class="form-control" placeholder="Ihr Name" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="phone">Telefon *</label>
+              <input type="tel" id="phone" name="phone" class="form-control" placeholder="+49 ..." required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="email">E-Mail</label>
+            <input type="email" id="email" name="email" class="form-control" placeholder="ihre@email.de">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="service">Gewünschte Leistung</label>
+            <select id="service" name="service" class="form-control">
+              <option value="">Bitte wählen...</option>
+              <option>Handwäsche / Komplettreinigung</option>
+              <option>Politur (1-Stufen)</option>
+              <option>Politur (2-Stufen)</option>
+              <option>Politur (3-Stufen)</option>
+              <option>Keramikversiegelung</option>
+              <option>Innenraumreinigung</option>
+              <option>Lederreinigung</option>
+              <option>Ozonbehandlung</option>
+              <option>Vogelkot-Spezialbehandlung</option>
+              <option>Autowasch-Club Mitgliedschaft</option>
+              <option>Sonstiges / Beratung</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="car">Fahrzeug</label>
+            <input type="text" id="car" name="car" class="form-control" placeholder="z.B. VW Golf, BMW 3er, Mercedes C-Klasse">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="message">Nachricht</label>
+            <textarea id="message" name="message" class="form-control" rows="4"
+              placeholder="Beschreiben Sie kurz, was Ihr Fahrzeug braucht..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-red" style="width:100%;justify-content:center;font-size:1rem;padding:16px;">
+            Anfrage absenden →
+          </button>
+          <p style="font-size:0.78rem;color:var(--text-dim);text-align:center;margin-top:12px;">
+            Alternativ direkt: <a href="https://wa.me/491783640234" style="color:#25D366;" target="_blank">WhatsApp schreiben</a>
+            oder <a href="tel:+491783640234" style="color:var(--red);">anrufen</a>
+          </p>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+document.getElementById('contactForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const alert = document.getElementById('formAlert');
+  const name = document.getElementById('name').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  if (!name || !phone) {
+    alert.className = 'alert alert-error';
+    alert.textContent = 'Bitte füllen Sie Name und Telefon aus.';
+    alert.style.display = 'block';
+    return;
+  }
+  const service = document.getElementById('service').value;
+  const car = document.getElementById('car').value;
+  const msg = document.getElementById('message').value;
+  const waText = encodeURIComponent(
+    `Hallo Car Clean Center!\n\nName: ${name}\nTelefon: ${phone}\nFahrzeug: ${car || '-'}\nLeistung: ${service || '-'}\nNachricht: ${msg || '-'}`
+  );
+  window.open(`https://wa.me/491783640234?text=${waText}`, '_blank');
+  alert.className = 'alert alert-success';
+  alert.textContent = '✓ Ihre Anfrage wird per WhatsApp gesendet. Wir melden uns schnellstmöglich!';
+  alert.style.display = 'block';
+  this.reset();
+});
+</script>
+{% endblock %}

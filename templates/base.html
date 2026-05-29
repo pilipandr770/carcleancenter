@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="de" prefix="og: https://ogp.me/ns#">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!-- SEO Meta -->
+  <title>{{ page_title }}</title>
+  <meta name="description" content="{{ page_desc }}">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="author" content="Car Clean Center Rüsselsheim">
+  <meta name="geo.region" content="DE-HE">
+  <meta name="geo.placename" content="Rüsselsheim am Main">
+  <meta name="geo.position" content="49.9964;8.4095">
+  <meta name="ICBM" content="49.9964, 8.4095">
+  <link rel="canonical" href="{{ business.base_url }}{{ canonical }}">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{ page_title }}">
+  <meta property="og:description" content="{{ page_desc }}">
+  <meta property="og:url" content="{{ business.base_url }}{{ canonical }}">
+  <meta property="og:site_name" content="Car Clean Center Rüsselsheim">
+  <meta property="og:locale" content="de_DE">
+  <meta property="og:image" content="{{ business.logo }}">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ page_title }}">
+  <meta name="twitter:description" content="{{ page_desc }}">
+  <meta name="twitter:image" content="{{ business.logo }}">
+
+  <!-- Favicon -->
+  <link rel="icon" href="https://carcleancenter.net/wp-content/uploads/2025/05/cropped-favicon-1-270x270.png" type="image/png">
+  <link rel="apple-touch-icon" href="https://carcleancenter.net/wp-content/uploads/2025/05/cropped-favicon-1-270x270.png">
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#DC1A1A">
+  <link rel="alternate" type="application/rss+xml" title="Car Clean Center Blog RSS" href="/rss.xml">
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <!-- Schema.org – LocalBusiness -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "AutoBodyShop",
+    "@id": "{{ business.base_url }}/#business",
+    "name": "Car Clean Center Rüsselsheim",
+    "alternateName": "Car Clean Center",
+    "description": "Professionelle Autopflege und Fahrzeugaufbereitung in Rüsselsheim am Main. Handwäsche, Politur, Keramikversiegelung und mehr.",
+    "url": "{{ business.base_url }}",
+    "telephone": "{{ business.phone }}",
+    "email": "{{ business.email }}",
+    "image": "{{ business.logo }}",
+    "founder": {
+      "@type": "Person",
+      "name": "David Wainer"
+    },
+    "foundingDate": "2025",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Uranstrasse 8",
+      "addressLocality": "Rüsselsheim am Main",
+      "postalCode": "65428",
+      "addressRegion": "Hessen",
+      "addressCountry": "DE"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 49.9964,
+      "longitude": 8.4095
+    },
+    "openingHoursSpecification": [
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+        "opens": "08:00",
+        "closes": "18:00"
+      }
+    ],
+    "areaServed": [
+      "Rüsselsheim am Main", "Frankfurt am Main", "Mainz", "Darmstadt",
+      "Wiesbaden", "Groß-Gerau", "Mörfelden-Walldorf", "Kelsterbach"
+    ],
+    "serviceType": [
+      "Autopflege", "Fahrzeugaufbereitung", "Handwäsche", "Politur",
+      "Keramikversiegelung", "Innenraumreinigung", "Lackkorrektur", "Ozonbehandlung"
+    ],
+    "priceRange": "€€",
+    "paymentAccepted": "Cash, Credit Card, PayPal",
+    "sameAs": [
+      "https://wa.me/491783640234"
+    ]
+  }
+  </script>
+
+  {% block extra_schema %}{% endblock %}
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- ══ HEADER ══ -->
+  <header class="site-header" id="header">
+    <nav class="nav-container">
+      <a class="nav-logo" href="/" aria-label="Car Clean Center Rüsselsheim">
+        <img src="{{ business.logo }}" alt="Car Clean Center Logo" width="160" height="50" loading="eager">
+      </a>
+
+      <button class="nav-toggle" id="navToggle" aria-label="Menü öffnen" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+
+      <ul class="nav-menu" id="navMenu">
+        <li><a href="/" class="nav-link {% if canonical == '/' %}active{% endif %}">Über uns</a></li>
+        <li><a href="/leistungen/" class="nav-link {% if '/leistungen' in canonical %}active{% endif %}">Leistungen</a></li>
+        <li><a href="/preisliste/" class="nav-link {% if '/preisliste' in canonical %}active{% endif %}">Preisliste</a></li>
+        <li><a href="/galerie/" class="nav-link {% if '/galerie' in canonical %}active{% endif %}">Galerie</a></li>
+        <li><a href="/blog/" class="nav-link {% if '/blog' in canonical %}active{% endif %}">Blog</a></li>
+        <li><a href="/faq/" class="nav-link {% if '/faq' in canonical %}active{% endif %}">FAQ</a></li>
+        <li>
+          <a href="/kontakt/" class="nav-cta">Termin buchen</a>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- ══ MAIN ══ -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ══ FOOTER ══ -->
+  <footer class="site-footer">
+    <div class="footer-top">
+      <div class="container footer-grid">
+
+        <div class="footer-col footer-brand">
+          <img src="{{ business.logo }}" alt="Car Clean Center" class="footer-logo" width="160" height="50" loading="lazy">
+          <p>Professionelle Autopflege in Rüsselsheim am Main.<br>
+          Handarbeit, Leidenschaft, sichtbare Ergebnisse.</p>
+          <div class="footer-social">
+            <a href="{{ business.whatsapp }}" class="social-btn whatsapp" target="_blank" rel="noopener" aria-label="WhatsApp">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            </a>
+            <a href="tel:{{ business.phone }}" class="social-btn phone" aria-label="Anrufen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/></svg>
+            </a>
+            <a href="https://www.instagram.com/carcleancenter65428?utm_source=qr" class="social-btn instagram" target="_blank" rel="noopener" aria-label="Instagram">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="5" ry="5"></rect>
+                <circle cx="12" cy="12" r="4"></circle>
+                <circle cx="17.5" cy="6.5" r="1"></circle>
+              </svg>
+            </a>
+            <a href="https://www.tiktok.com/@carcleancenter65428?_r=1&_t=ZG-96jkrhUGXtA" class="social-btn tiktok" target="_blank" rel="noopener" aria-label="TikTok">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true">
+                <path d="M16.6 5.8c-1-.7-1.7-1.9-1.9-3.1h-3.2v12.1c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2c.2 0 .4 0 .6.1V9.6c-.2 0-.4-.1-.6-.1-2.9 0-5.2 2.3-5.2 5.2s2.3 5.2 5.2 5.2 5.2-2.3 5.2-5.2V8.9c1.2.9 2.6 1.4 4.1 1.4V7.1c-.8 0-1.6-.2-2.2-.7z"></path>
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h3 class="footer-heading">Navigation</h3>
+          <ul class="footer-links">
+            <li><a href="/">Über uns</a></li>
+            <li><a href="/leistungen/">Leistungen</a></li>
+            <li><a href="/preisliste/">Preisliste</a></li>
+            <li><a href="/galerie/">Galerie</a></li>
+            <li><a href="/blog/">Blog & Tipps</a></li>
+            <li><a href="/faq/">FAQ</a></li>
+            <li><a href="/kontakt/">Kontakt</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h3 class="footer-heading">Leistungen</h3>
+          <ul class="footer-links">
+            <li><a href="/leistungen/">Handwäsche</a></li>
+            <li><a href="/leistungen/">Politur & Lackkorrektur</a></li>
+            <li><a href="/leistungen/">Keramikversiegelung</a></li>
+            <li><a href="/leistungen/">Innenraumreinigung</a></li>
+            <li><a href="/leistungen/">Lederreinigung</a></li>
+            <li><a href="/leistungen/">Ozonbehandlung</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h3 class="footer-heading">Kontakt</h3>
+          <address class="footer-address">
+            <p><strong>Car Clean Center Rüsselsheim</strong></p>
+            <p>Uranstrasse 8<br>65428 Rüsselsheim am Main</p>
+            <p><a href="tel:{{ business.phone }}">{{ business.phone_display }}</a></p>
+            <p><a href="mailto:{{ business.email }}">{{ business.email }}</a></p>
+            <p class="hours-note">Mo–Sa nach Vereinbarung<br>So geschlossen</p>
+          </address>
+          <a href="{{ business.maps }}" target="_blank" rel="noopener" class="maps-link">
+            📍 Route berechnen
+          </a>
+          <a href="https://maps.app.goo.gl/izo2LgG3KRjFr1pa6?g_st=iw" target="_blank" rel="noopener" class="maps-link" style="display:block;margin-top:8px;">
+            ⭐ Google Bewertungen
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="container footer-bottom-inner">
+        <p>© 2025 Car Clean Center Rüsselsheim. Alle Rechte vorbehalten.</p>
+        <nav aria-label="Rechtliche Links">
+          <a href="/impressum/">Impressum</a>
+          <a href="/datenschutz/">Datenschutz</a>
+          <button type="button" class="cookie-settings-link" data-consent-open>Cookie-Einstellungen</button>
+        </nav>
+      </div>
+    </div>
+  </footer>
+
+  <div class="cookie-banner" id="cookieBanner" role="dialog" aria-label="Cookie Einwilligung" aria-live="polite" hidden>
+    <div class="cookie-banner-inner">
+      <div>
+        <p class="cookie-title">Datenschutz-Einstellungen</p>
+        <p class="cookie-text">
+          Wir verwenden nur notwendige Technologien fuer den Betrieb der Website. Externe Medien wie Google Maps laden wir nur mit Ihrer Einwilligung.
+          Details finden Sie in der <a href="/datenschutz/">Datenschutzerklaerung</a>.
+        </p>
+      </div>
+      <div class="cookie-actions">
+        <button type="button" class="btn btn-outline btn-sm" id="consentEssentialOnly">Nur notwendige</button>
+        <button type="button" class="btn btn-outline btn-sm" id="consentOpenSettings">Einstellungen</button>
+        <button type="button" class="btn btn-red btn-sm" id="consentAcceptAll">Alle akzeptieren</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="consent-modal" id="consentModal" aria-hidden="true" hidden>
+    <div class="consent-modal-backdrop" data-consent-close></div>
+    <section class="consent-modal-panel" role="dialog" aria-modal="true" aria-label="Cookie Einstellungen">
+      <h2>Cookie-Einstellungen</h2>
+      <p class="cookie-text" style="margin-bottom:20px;">
+        Sie koennen festlegen, welche optionalen Inhalte geladen werden duerfen.
+      </p>
+      <div class="consent-option">
+        <div>
+          <p class="consent-option-title">Notwendige Technologien</p>
+          <p class="consent-option-text">Immer aktiv (Website-Funktion, Sicherheitsfunktionen).</p>
+        </div>
+        <span class="consent-badge">Immer aktiv</span>
+      </div>
+      <div class="consent-option">
+        <div>
+          <p class="consent-option-title">Externe Medien (Google Maps)</p>
+          <p class="consent-option-text">Laedt Inhalte von Drittanbietern und kann personenbezogene Daten (z. B. IP-Adresse) uebermitteln.</p>
+        </div>
+        <label class="consent-switch">
+          <input type="checkbox" id="consentExternalMedia">
+          <span>Aktivieren</span>
+        </label>
+      </div>
+      <div class="cookie-actions" style="margin-top:20px;justify-content:flex-end;">
+        <button type="button" class="btn btn-outline btn-sm" data-consent-close>Abbrechen</button>
+        <button type="button" class="btn btn-red btn-sm" id="consentSave">Auswahl speichern</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- ══ FLOATING CTA ══ -->
+  <div class="float-cta">
+    <a href="{{ business.whatsapp }}" class="float-btn float-wa" target="_blank" rel="noopener" aria-label="WhatsApp">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    </a>
+    <a href="tel:{{ business.phone }}" class="float-btn float-phone" aria-label="Anrufen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="22" height="22"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/></svg>
+    </a>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+</body>
+</html>

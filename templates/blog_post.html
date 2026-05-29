@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "{{ post.title | e }}",
+  "description": "{{ (post.meta_description or post.excerpt or '') | e }}",
+  "datePublished": "{{ post.created_at[:10] }}",
+  "dateModified": "{{ post.created_at[:10] }}",
+  "author": {
+    "@type": "Organization",
+    "name": "Car Clean Center Rüsselsheim"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Car Clean Center Rüsselsheim",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "{{ business.logo }}"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "{{ business.base_url }}/blog/{{ post.slug }}/"
+  }
+}
+</script>
+{% if faq_items %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {% for faq in faq_items %}
+    {
+      "@type": "Question",
+      "name": "{{ faq.question | e }}",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{{ faq.answer | e }}"
+      }
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ]
+}
+</script>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<div class="page-hero">
+  <div class="container">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span class="breadcrumb-sep">›</span>
+      <a href="/blog/">Blog</a>
+      <span class="breadcrumb-sep">›</span>
+      <span>{{ post.title[:50] }}{% if post.title|length > 50 %}…{% endif %}</span>
+    </nav>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="post-layout">
+      <article class="post-content" itemscope itemtype="https://schema.org/BlogPosting">
+
+        <header class="post-header">
+          <div class="post-meta">
+            <span class="post-meta-item" itemprop="author">Car Clean Center Rüsselsheim</span>
+            <span class="post-meta-sep">·</span>
+            <time class="post-meta-item" itemprop="datePublished" datetime="{{ post.created_at[:10] }}">
+              {{ post.created_at[:10] }}
+            </time>
+            <span class="post-meta-sep">·</span>
+            <span class="post-meta-item">{{ post.reading_time or 5 }} Min Lesezeit</span>
+          </div>
+          <h1 class="post-title" itemprop="headline">{{ post.title }}</h1>
+          {% if post.excerpt %}
+          <p class="post-excerpt" itemprop="description">{{ post.excerpt }}</p>
+          {% endif %}
+          {% if post.source_url %}
+          <p class="post-meta-item" style="margin-top:12px;display:block;">
+            Inspiriert von: <a href="{{ post.source_url }}" target="_blank" rel="noopener" style="color:var(--red);">{{ post.source_title or post.source_feed or post.source_url }}</a>
+          </p>
+          {% endif %}
+        </header>
+
+        <div class="post-body" itemprop="articleBody">
+          {{ post.content | safe }}
+        </div>
+
+        {% if post.keywords %}
+        <div class="post-keywords" aria-label="Schlagwörter">
+          {% for kw in post.keywords.split(',') %}
+          <span class="keyword-tag">{{ kw.strip() }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if post.tags %}
+        <div class="post-keywords" aria-label="Tags">
+          {% for tag in post.tags.split(',') %}
+          <span class="keyword-tag">{{ tag.strip() }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if faq_items %}
+        <section class="sidebar-card" style="margin-top:40px;">
+          <p class="sidebar-title">Häufige Fragen</p>
+          <div class="faq-list" style="max-width:none;gap:10px;">
+            {% for faq in faq_items %}
+            <div class="faq-item">
+              <button class="faq-question" type="button" aria-expanded="false">
+                <span>{{ faq.question }}</span>
+                <span class="faq-icon">+</span>
+              </button>
+              <div class="faq-answer"><p>{{ faq.answer }}</p></div>
+            </div>
+            {% endfor %}
+          </div>
+        </section>
+        {% endif %}
+
+        <!-- CTA in article -->
+        <div class="cta-banner" style="margin-top:48px;">
+          <div class="cta-banner-inner">
+            <div>
+              <h3 class="cta-title" style="font-size:1.4rem;">Professionelle Autopflege in Rüsselsheim</h3>
+              <p class="cta-desc">Bringen Sie Ihr Fahrzeug zu uns – Termin einfach per Telefon oder WhatsApp.</p>
+            </div>
+            <div class="cta-actions">
+              <a href="/kontakt/" class="btn btn-red">Termin buchen</a>
+              <a href="https://wa.me/491783640234" class="btn btn-wa" target="_blank" rel="noopener">WhatsApp</a>
+            </div>
+          </div>
+        </div>
+
+      </article>
+
+      <!-- Sidebar -->
+      <aside class="post-sidebar">
+        <!-- Contact card -->
+        <div class="sidebar-card">
+          <p class="sidebar-title">Termin vereinbaren</p>
+          <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:20px;">
+            Car Clean Center Rüsselsheim<br>
+            Uranstrasse 8, 65428 Rüsselsheim
+          </p>
+          <a href="tel:+491783640234" class="btn btn-red" style="width:100%;justify-content:center;margin-bottom:10px;">
+            📞 Anrufen
+          </a>
+          <a href="https://wa.me/491783640234" class="btn btn-wa" style="width:100%;justify-content:center;" target="_blank" rel="noopener">
+            WhatsApp
+          </a>
+        </div>
+
+        <!-- Other posts -->
+        {% if other_posts %}
+        <div class="sidebar-card">
+          <p class="sidebar-title">Weitere Artikel</p>
+          {% for p in other_posts %}
+          <a href="/blog/{{ p.slug }}/" class="sidebar-post">
+            <span class="sidebar-post-title">{{ p.title }}</span>
+            <span class="sidebar-post-date">{{ p.created_at[:10] }}</span>
+          </a>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Services card -->
+        <div class="sidebar-card">
+          <p class="sidebar-title">Unsere Leistungen</p>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
+            <li><a href="/leistungen/" style="font-size:0.9rem;color:var(--text-muted);display:flex;align-items:center;gap:8px;"><span>→</span>Handwäsche</a></li>
+            <li><a href="/leistungen/" style="font-size:0.9rem;color:var(--text-muted);display:flex;align-items:center;gap:8px;"><span>→</span>Politur & Lackkorrektur</a></li>
+            <li><a href="/leistungen/" style="font-size:0.9rem;color:var(--text-muted);display:flex;align-items:center;gap:8px;"><span>→</span>Keramikversiegelung</a></li>
+            <li><a href="/leistungen/" style="font-size:0.9rem;color:var(--text-muted);display:flex;align-items:center;gap:8px;"><span>→</span>Innenraumreinigung</a></li>
+            <li><a href="/leistungen/" style="font-size:0.9rem;color:var(--text-muted);display:flex;align-items:center;gap:8px;"><span>→</span>Ozonbehandlung</a></li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

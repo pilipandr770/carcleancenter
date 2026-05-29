@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <nav class="breadcrumb"><a href="/">Home</a><span class="breadcrumb-sep">›</span><span>Leistungen</span></nav>
+    <span class="section-label">Was wir bieten</span>
+    <h1 class="section-title">Unsere <span>Leistungen</span></h1>
+    <p class="text-muted" style="max-width:540px;">Von der einfachen Handwäsche bis zur professionellen Lackkorrektur –
+    alles aus einer Hand in Rüsselsheim am Main.</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="services-grid">
+      {% for s in services %}
+      <article class="service-card">
+        <span class="service-icon">{{ s.icon }}</span>
+        <h2 class="service-title">{{ s.title }}</h2>
+        <p class="service-desc">{{ s.desc }}</p>
+      </article>
+      {% endfor %}
+    </div>
+
+    <!-- Spezialleistung highlight -->
+    <div class="cta-banner" style="margin-top:60px;">
+      <div class="cta-banner-inner">
+        <div>
+          <h2 class="cta-title">🔬 Vogelkot-Spezialbehandlung</h2>
+          <p class="cta-desc">Eingebrannte Vogelkotspuren im Lack? Mit unserer hausintern entwickelten Spezialformel holen wir selbst tief eingebrannte Rückstände heraus, die mit normaler Politur nicht zu entfernen sind. <strong style="color:var(--gold);">Preis auf Anfrage.</strong></p>
+        </div>
+        <a href="/kontakt/" class="btn btn-red">Anfrage stellen</a>
+      </div>
+    </div>
+
+    <!-- Full service list -->
+    <div style="margin-top:80px;">
+      <h2 class="section-title text-center" style="margin-bottom:48px;">Alle <span>Leistungen</span> im Überblick</h2>
+
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:24px;">
+        {% set cats = [
+          ('🚿 Basisleistungen', ['Handwäsche (pH-neutral, inkl. Felgenreinigung)', 'Innenraumreinigung (Saugen, Cockpit, Scheiben)', 'Komplettreinigung (Innen & Außen)']),
+          ('🧴 Aufbereitung & Pflege', ['Lackkneten (Teer- und Harzentfernung)', 'Polster- & Teppichreinigung (Shampoonieren / Extraktion)', 'Lederreinigung & Pflege (inkl. Imprägnierung)', 'Motorraumreinigung', 'Felgenintensiv­reinigung & Versiegelung']),
+          ('✨ Politur & Lackkorrektur', ['1-Stufen-Politur: Glanzpolitur, leichte Kratzer', '2-Stufen-Politur: leichte bis mittlere Defekte, Tiefenglanz', '3-Stufen-Politur: Defektkorrektur + Hochglanz-Finish']),
+          ('🛡️ Versiegelungen', ['Wachsversiegelung (ab 3 Monate Schutz)', 'Nano-Versiegelung (6-12 Monate)', 'Keramikversiegelung (bis 5 Jahre Schutz)']),
+          ('⭐ Zusatzleistungen', ['Tierhaarentfernung', 'Ozonbehandlung (Geruchsbeseitigung)', 'Nanoversiegelung Scheiben (Lotuseffekt)', 'Cabrioverdeck-Reinigung & Imprägnierung', 'Oldtimer- / Supercar-Spezialpflege']),
+        ] %}
+        {% for title, items in cats %}
+        <div class="price-section">
+          <div class="price-section-header">
+            <p class="price-section-title">{{ title }}</p>
+          </div>
+          <ul style="list-style:none;padding:20px 24px;display:flex;flex-direction:column;gap:10px;">
+            {% for item in items %}
+            <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.95rem;color:var(--text-muted);">
+              <span style="color:var(--red);flex-shrink:0;margin-top:2px;">✓</span>{{ item }}
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section-sm" style="background:var(--bg2);border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="cta-banner">
+      <div class="cta-banner-inner">
+        <div>
+          <h2 class="cta-title">Ihr Fahrzeug verdient das Beste</h2>
+          <p class="cta-desc">Persönliche Beratung und Terminvereinbarung – wir freuen uns auf Sie!</p>
+        </div>
+        <div class="cta-actions">
+          <a href="/kontakt/" class="btn btn-red">Termin buchen</a>
+          <a href="/preisliste/" class="btn btn-outline">Preisliste ansehen</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

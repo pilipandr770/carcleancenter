@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <nav class="breadcrumb"><a href="/">Home</a><span class="breadcrumb-sep">›</span><span>FAQ</span></nav>
+    <span class="section-label">Häufige Fragen</span>
+    <h1 class="section-title">Fragen & <span>Antworten</span></h1>
+    <p class="text-muted" style="max-width:520px;">
+      Alles, was Sie über unsere Autopflege-Dienstleistungen in Rüsselsheim wissen möchten.
+    </p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="faq-list" itemscope itemtype="https://schema.org/FAQPage">
+      {% for f in faqs %}
+      <div class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+        <button class="faq-question" itemprop="name" aria-expanded="false">
+          {{ f.q }}
+          <span class="faq-icon" aria-hidden="true">+</span>
+        </button>
+        <div class="faq-answer" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+          <p itemprop="text">{{ f.a }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div style="text-align:center;margin-top:60px;">
+      <p class="text-muted" style="margin-bottom:24px;">Noch eine Frage? Wir sind für Sie da!</p>
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+        <a href="tel:+491783640234" class="btn btn-red">📞 Anrufen</a>
+        <a href="https://wa.me/491783640234" class="btn btn-wa" target="_blank" rel="noopener">WhatsApp</a>
+        <a href="/kontakt/" class="btn btn-outline">Kontaktformular</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

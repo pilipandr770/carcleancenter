@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.pyo
+.Python
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Flask / local config
+.env
+.env.*
+!.env.example
+instance/
+
+# App data / generated files
+blog.db
+*.db
+*.sqlite3
+*.log
+
+# Test / cache
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# IDE / OS
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+
+# Build artifacts
+build/
+dist/
+*.egg-info/

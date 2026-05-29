@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <nav class="breadcrumb"><a href="/">Home</a><span class="breadcrumb-sep">›</span><span>Datenschutz</span></nav>
+    <span class="section-label">Rechtliches</span>
+    <h1 class="section-title">Datenschutzerklaerung</h1>
+    <p class="text-muted" style="max-width:760px;">
+      Informationen zur Verarbeitung personenbezogener Daten gemaess DSGVO.
+    </p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container" style="max-width:980px;display:grid;gap:24px;">
+
+    <article class="contact-card" style="padding:28px;">
+      <h2 class="contact-card-title" style="font-size:1.1rem;">1. Verantwortlicher</h2>
+      <p>
+        Verantwortlich fuer die Datenverarbeitung auf dieser Website ist:<br>
+        <strong>Car Clean Center Ruesselsheim, Inhaber David Wainer</strong><br>
+        Pfaelzer Strasse 36, 65929 Frankfurt, Deutschland<br>
+        Telefon: <a href="tel:{{ business.phone }}">{{ business.phone_display }}</a><br>
+        E-Mail: <a href="mailto:{{ business.email }}">{{ business.email }}</a>
+      </p>
+    </article>
+
+    <article class="contact-card" style="padding:28px;">
+      <h2 class="contact-card-title" style="font-size:1.1rem;">2. Zugriffsdaten und Server-Logfiles</h2>
+      <p>
+        Beim Aufruf dieser Website erhebt und speichert der Hosting-Provider automatisch Informationen in sogenannten
+        Server-Logfiles, die Ihr Browser automatisch uebermittelt (z. B. IP-Adresse, Datum/Uhrzeit, aufgerufene Seite,
+        Referrer, Browsertyp, Betriebssystem). Diese Daten werden zur Sicherstellung des technischen Betriebs,
+        zur Fehleranalyse und zur IT-Sicherheit verarbeitet.
+      </p>
+      <p>
+        Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an sicherem und stabilem Betrieb der Website).
+      </p>
+    </article>
+
+    <article class="contact-card" style="padding:28px;">
+      <h2 class="contact-card-title" style="font-size:1.1rem;">3. Kontaktaufnahme (Telefon, E-Mail, WhatsApp)</h2>
+      <p>
+        Wenn Sie uns kontaktieren, verarbeiten wir die von Ihnen uebermittelten Daten (z. B. Name, Telefonnummer,
+        E-Mail-Adresse, Inhalt der Nachricht), um Ihre Anfrage zu bearbeiten.
+      </p>
+      <p>
+        Rechtsgrundlagen:
+        Art. 6 Abs. 1 lit. b DSGVO (vorvertragliche Massnahmen) und Art. 6 Abs. 1 lit. f DSGVO
+        (effiziente Bearbeitung von Kundenanfragen).
+      </p>
+      <p>
+        Bei Kontaktaufnahme ueber WhatsApp erfolgt die Datenverarbeitung zusaetzlich durch WhatsApp Ireland Limited.
+        Es kann dabei zu Datenuebermittlungen in Drittstaaten kommen.
+      </p>
+    </article>
+
+    <article class="contact-card" style="padding:28px;">
+      <h2 class="contact-card-title" style="font-size:1.1rem;">4. Cookies und lokale Speicherung</h2>
+      <p>
+        Diese Website verwendet keine Marketing- oder Tracking-Cookies. Es wird ein Eintrag im Browser (Local Storage)
+        gespeichert, um Ihre Cookie-/Einwilligungseinstellungen zu merken.
+      </p>
+      <p>
+        Rechtsgrundlage: Art. 6 Abs. 1 lit. c DSGVO i. V. m. Paragraph 25 Abs. 2 TTDSG (notwendige Speicherung der Einwilligungsentscheidung).
+      </p>
+    </article>
+
+    <article class="contact-card" style="padding:28px;">
+      <h2 class="contact-card-title" style="font-size:1.1rem;">5. Eingebundene Inhalte und Drittanbieter</h2>
+      <p>
+        Auf einzelnen Seiten koennen externe Inhalte eingebunden sein, insbesondere:
+      </p>
+      <ul>
+        <li>Google Maps (Kartendarstellung)</li>
+        <li>Google Fonts (Web-Schriftarten)</li>
+        <li>WhatsApp-Link</li>
+      </ul>
+      <p>
+        Beim Laden dieser Inhalte kann Ihre IP-Adresse an die jeweiligen Anbieter uebermittelt werden.
+        Diese Inhalte werden erst nach Ihrer Einwilligung ueber den Cookie-Banner geladen.
+        Rechtsgrundlage: Art. 6 Abs. 1 lit. a DSGVO und Paragraph 25 Abs. 1 TTDSG.
+      </p>
+    </article>
+
+    <article class="contact-card" style="padding:28px;">
+      <h2 class="contact-card-title" style="font-size:1.1rem;">6. Einwilligung widerrufen oder aendern</h2>
+      <p>
+        Sie koennen Ihre Einwilligung fuer externe Medien jederzeit ueber den Link
+        "Cookie-Einstellungen" im Footer der Website widerrufen oder neu setzen.
+      </p>
+    </article>
+
+    <article class="contact-card" style="padding:28px;">
+      <h2 class="contact-card-title" style="font-size:1.1rem;">7. Ihre Rechte</h2>
+      <p>Sie haben nach der DSGVO insbesondere folgende Rechte:</p>
+      <ul>
+        <li>Auskunft (Art. 15 DSGVO)</li>
+        <li>Berichtigung (Art. 16 DSGVO)</li>
+        <li>Loeschung (Art. 17 DSGVO)</li>
+        <li>Einschraenkung der Verarbeitung (Art. 18 DSGVO)</li>
+        <li>Datenuebertragbarkeit (Art. 20 DSGVO)</li>
+        <li>Widerspruch gegen bestimmte Verarbeitungen (Art. 21 DSGVO)</li>
+      </ul>
+      <p>
+        Zudem haben Sie das Recht, sich bei einer Datenschutz-Aufsichtsbehoerde zu beschweren.
+      </p>
+    </article>
+
+    <article class="contact-card" style="padding:28px;">
+      <h2 class="contact-card-title" style="font-size:1.1rem;">8. Speicherdauer</h2>
+      <p>
+        Personenbezogene Daten werden nur so lange gespeichert, wie dies fuer die jeweiligen Zwecke erforderlich ist
+        oder gesetzliche Aufbewahrungspflichten bestehen.
+      </p>
+    </article>
+
+    <article class="contact-card" style="padding:28px;">
+      <h2 class="contact-card-title" style="font-size:1.1rem;">9. Datensicherheit</h2>
+      <p>
+        Wir setzen angemessene technische und organisatorische Sicherheitsmassnahmen ein,
+        um Ihre Daten gegen Verlust, Manipulation und unberechtigten Zugriff zu schuetzen.
+      </p>
+    </article>
+
+    <article class="contact-card" style="padding:28px;">
+      <h2 class="contact-card-title" style="font-size:1.1rem;">10. Aktualitaet und Aenderungen</h2>
+      <p>
+        Wir behalten uns vor, diese Datenschutzerklaerung anzupassen, damit sie stets den aktuellen
+        rechtlichen Anforderungen entspricht oder um Aenderungen unserer Leistungen umzusetzen.
+      </p>
+    </article>
+
+    <p class="text-muted" style="font-size:0.85rem;margin-top:4px;">
+      Stand: Mai 2026
+    </p>
+  </div>
+</section>
+{% endblock %}
