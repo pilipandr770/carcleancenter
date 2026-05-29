@@ -43,6 +43,20 @@ DB_SCHEMA_RAW = os.getenv('DB_SCHEMA', 'public').strip() or 'public'
 DB_SCHEMA = DB_SCHEMA_RAW if re.match(r'^[A-Za-z_][A-Za-z0-9_]*$', DB_SCHEMA_RAW) else 'public'
 DB_BACKEND = 'postgres' if DATABASE_URL else 'sqlite'
 
+
+def format_ymd(value, default=''):
+    if value is None:
+        return default
+    if hasattr(value, 'strftime'):
+        return value.strftime('%Y-%m-%d')
+    text = str(value)
+    return text[:10] if text else default
+
+
+@app.template_filter('ymd')
+def ymd_filter(value):
+    return format_ymd(value, '')
+
 BUSINESS = {
     'name': 'Car Clean Center Rüsselsheim',
     'short': 'Car Clean Center',
@@ -773,7 +787,7 @@ def sitemap_xml():
   </url>''')
 
     for p in posts:
-        date = (p['created_at'] or '2025-06-01')[:10]
+        date = format_ymd(p['created_at'], '2025-06-01')
         xml.append(f'''  <url>
     <loc>{BASE_URL}/blog/{p['slug']}/</loc>
     <lastmod>{date}</lastmod>
@@ -808,7 +822,10 @@ def rss_xml():
         description = xml_escape((post['excerpt'] or '')[:180])
         created_at = post['created_at'] or '2025-06-01 00:00:00'
         try:
-            pub_date = datetime.strptime(created_at[:19], '%Y-%m-%d %H:%M:%S').strftime('%a, %d %b %Y %H:%M:%S +0000')
+            if hasattr(created_at, 'strftime'):
+                pub_date = created_at.strftime('%a, %d %b %Y %H:%M:%S +0000')
+            else:
+                pub_date = datetime.strptime(str(created_at)[:19], '%Y-%m-%d %H:%M:%S').strftime('%a, %d %b %Y %H:%M:%S +0000')
         except Exception:
             pub_date = 'Mon, 01 Jun 2025 00:00:00 +0000'
         xml.append(f'''<item>

@@ -7,8 +7,8 @@
   "@type": "BlogPosting",
   "headline": "{{ post.title | e }}",
   "description": "{{ (post.meta_description or post.excerpt or '') | e }}",
-  "datePublished": "{{ post.created_at[:10] }}",
-  "dateModified": "{{ post.created_at[:10] }}",
+  "datePublished": "{{ post.created_at | ymd }}",
+  "dateModified": "{{ post.created_at | ymd }}",
   "author": {
     "@type": "Organization",
     "name": "Car Clean Center Rüsselsheim"
@@ -72,8 +72,8 @@
           <div class="post-meta">
             <span class="post-meta-item" itemprop="author">Car Clean Center Rüsselsheim</span>
             <span class="post-meta-sep">·</span>
-            <time class="post-meta-item" itemprop="datePublished" datetime="{{ post.created_at[:10] }}">
-              {{ post.created_at[:10] }}
+            <time class="post-meta-item" itemprop="datePublished" datetime="{{ post.created_at | ymd }}">
+              {{ post.created_at | ymd }}
             </time>
             <span class="post-meta-sep">·</span>
             <span class="post-meta-item">{{ post.reading_time or 5 }} Min Lesezeit</span>
@@ -166,7 +166,7 @@
           {% for p in other_posts %}
           <a href="/blog/{{ p.slug }}/" class="sidebar-post">
             <span class="sidebar-post-title">{{ p.title }}</span>
-            <span class="sidebar-post-date">{{ p.created_at[:10] }}</span>
+            <span class="sidebar-post-date">{{ p.created_at | ymd }}</span>
           </a>
           {% endfor %}
         </div>

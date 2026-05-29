@@ -25,7 +25,7 @@
         <div class="blog-card-img">🚗</div>
         <div class="blog-card-body">
           <div class="blog-card-meta">
-            <time itemprop="datePublished" datetime="{{ post.created_at[:10] }}">{{ post.created_at[:10] }}</time>
+            <time itemprop="datePublished" datetime="{{ post.created_at | ymd }}">{{ post.created_at | ymd }}</time>
             <span>·</span>
             <span>{{ post.reading_time or 5 }} Min</span>
           </div>

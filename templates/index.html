@@ -215,7 +215,7 @@
         <div class="blog-card-img">🚗</div>
         <div class="blog-card-body">
           <div class="blog-card-meta">
-            <span>{{ post.created_at[:10] }}</span>
+            <span>{{ post.created_at | ymd }}</span>
             <span class="blog-card-sep">·</span>
             <span>{{ post.reading_time or 5 }} Min Lesezeit</span>
           </div>
