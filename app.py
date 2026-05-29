@@ -10,7 +10,7 @@ from email.utils import parsedate_to_datetime
 from xml.sax.saxutils import escape as xml_escape
 from datetime import datetime
 from flask import (Flask, render_template, request, jsonify,
-                   abort, g, make_response)
+                   abort, g, make_response, redirect, session, url_for)
 from dotenv import load_dotenv
 
 try:
@@ -572,8 +572,128 @@ def datenschutz():
 
 
 # ──────────────────────────────────────────────
-# ADMIN API
+# ADMIN PANEL / API
 # ──────────────────────────────────────────────
+def build_and_store_blog_post(topic: str | None = None) -> dict:
+    if not ANTHROPIC_API_KEY:
+        raise RuntimeError('ANTHROPIC_API_KEY not set')
+
+    db = get_db()
+    posts_table = table_name('blog_posts')
+    existing = [r['title'] for r in db_execute(db, f'SELECT title FROM {posts_table}').fetchall()]
+    unused = [t for t in BLOG_TOPICS
+              if not any(slugify(t[:25]) in slugify(e[:25]) for e in existing)]
+
+    requested_topic = (topic or '').strip()
+    source = None
+    if not requested_topic:
+        source = get_daily_inspiration(db)
+
+    selected_topic = requested_topic or (source['title'] if source else random.choice(unused) if unused else random.choice(BLOG_TOPICS))
+
+    post_data = generate_blog_post(selected_topic, source=source)
+    slug = slugify(post_data['title'])
+    base = slug
+    i = 1
+    while db_execute(db, f'SELECT id FROM {posts_table} WHERE slug=?', (slug,)).fetchone():
+        slug = f'{base}-{i}'
+        i += 1
+
+    source_title = source['title'] if source else ''
+    source_url = source['link'] if source else ''
+    source_feed = source['source_feed'] if source else ''
+    source_excerpt = source['summary'] if source else ''
+
+    db_execute(db, f'''
+        INSERT INTO {posts_table} (title, slug, excerpt, content, meta_description, keywords, reading_time, source_feed, source_title, source_url, source_excerpt, tags, faq_json)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (post_data['title'], slug, post_data.get('excerpt', ''),
+          post_data['content'], post_data.get('meta_description', ''),
+          post_data.get('keywords', ''), post_data.get('reading_time', 5),
+          source_feed, source_title, source_url, source_excerpt, post_data.get('tags', ''),
+          json.dumps(post_data.get('faq_json', []), ensure_ascii=False)))
+    db.commit()
+    return {
+        'slug': slug,
+        'title': post_data['title'],
+        'source': source_url,
+        'topic': selected_topic,
+    }
+
+
+def admin_is_authenticated() -> bool:
+    return bool(session.get('admin_authenticated'))
+
+
+@app.route('/admin/', methods=['GET', 'POST'])
+def admin_login():
+    if admin_is_authenticated():
+        return redirect(url_for('admin_dashboard'))
+
+    error = None
+    if request.method == 'POST':
+        secret = (request.form.get('secret') or '').strip()
+        if secret == ADMIN_SECRET:
+            session['admin_authenticated'] = True
+            return redirect(url_for('admin_dashboard'))
+        error = 'Ungueltiger Admin-Secret.'
+
+    return render_template(
+        'admin_login.html',
+        business=BUSINESS,
+        error=error,
+        page_title='Admin Login | Car Clean Center',
+        page_desc='Interner Admin-Zugang',
+        canonical='/admin/'
+    )
+
+
+@app.route('/admin/dashboard/', methods=['GET'])
+def admin_dashboard():
+    if not admin_is_authenticated():
+        return redirect(url_for('admin_login'))
+
+    return render_template(
+        'admin_dashboard.html',
+        business=BUSINESS,
+        result=None,
+        error=None,
+        page_title='Admin Dashboard | Car Clean Center',
+        page_desc='Interne Blog-Verwaltung',
+        canonical='/admin/dashboard/'
+    )
+
+
+@app.route('/admin/generate/', methods=['POST'])
+def admin_generate_blog():
+    if not admin_is_authenticated():
+        return redirect(url_for('admin_login'))
+
+    topic = request.form.get('topic', '')
+    result = None
+    error = None
+    try:
+        result = build_and_store_blog_post(topic=topic)
+    except Exception as e:
+        error = str(e)
+
+    return render_template(
+        'admin_dashboard.html',
+        business=BUSINESS,
+        result=result,
+        error=error,
+        page_title='Admin Dashboard | Car Clean Center',
+        page_desc='Interne Blog-Verwaltung',
+        canonical='/admin/dashboard/'
+    )
+
+
+@app.route('/admin/logout/', methods=['POST'])
+def admin_logout():
+    session.pop('admin_authenticated', None)
+    return redirect(url_for('admin_login'))
+
+
 @app.route('/api/generate-blog', methods=['POST'])
 def api_generate_blog():
     data = request.get_json(silent=True) or {}
@@ -581,43 +701,9 @@ def api_generate_blog():
     if secret != ADMIN_SECRET:
         abort(403)
 
-    if not ANTHROPIC_API_KEY:
-        return jsonify({'success': False, 'error': 'ANTHROPIC_API_KEY not set'}), 500
-
-    db = get_db()
-    posts_table = table_name('blog_posts')
-    existing = [r['title'] for r in db_execute(db, f'SELECT title FROM {posts_table}').fetchall()]
-    unused = [t for t in BLOG_TOPICS
-              if not any(slugify(t[:25]) in slugify(e[:25]) for e in existing)]
-    source = None
-    if not data.get('topic'):
-        source = get_daily_inspiration(db)
-
-    topic = data.get('topic') or (source['title'] if source else random.choice(unused) if unused else random.choice(BLOG_TOPICS))
-
     try:
-        post_data = generate_blog_post(topic, source=source)
-        slug = slugify(post_data['title'])
-        base = slug
-        i = 1
-        while db_execute(db, f'SELECT id FROM {posts_table} WHERE slug=?', (slug,)).fetchone():
-            slug = f'{base}-{i}'; i += 1
-
-        source_title = source['title'] if source else ''
-        source_url = source['link'] if source else ''
-        source_feed = source['source_feed'] if source else ''
-        source_excerpt = source['summary'] if source else ''
-
-        db_execute(db, f'''
-            INSERT INTO {posts_table} (title, slug, excerpt, content, meta_description, keywords, reading_time, source_feed, source_title, source_url, source_excerpt, tags, faq_json)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (post_data['title'], slug, post_data.get('excerpt', ''),
-              post_data['content'], post_data.get('meta_description', ''),
-              post_data.get('keywords', ''), post_data.get('reading_time', 5),
-              source_feed, source_title, source_url, source_excerpt, post_data.get('tags', ''),
-              json.dumps(post_data.get('faq_json', []), ensure_ascii=False)))
-        db.commit()
-        return jsonify({'success': True, 'slug': slug, 'title': post_data['title'], 'source': source_url})
+        result = build_and_store_blog_post(topic=data.get('topic'))
+        return jsonify({'success': True, **result})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 

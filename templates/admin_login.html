@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<meta name="robots" content="noindex,nofollow">
+{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container page-hero-inner">
+    <h1 class="section-title">Admin <span>Login</span></h1>
+    <p class="section-sub">Interner Zugang zur Blog-Verwaltung.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container" style="max-width:640px;">
+    <div class="contact-form-wrap">
+      {% if error %}
+      <div class="alert alert-error">{{ error }}</div>
+      {% endif %}
+
+      <form method="post" action="/admin/">
+        <div class="form-group">
+          <label class="form-label" for="secret">Admin Secret</label>
+          <input class="form-control" id="secret" name="secret" type="password" required autocomplete="current-password" placeholder="ADMIN_SECRET eingeben">
+        </div>
+        <button type="submit" class="btn btn-red">Einloggen</button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

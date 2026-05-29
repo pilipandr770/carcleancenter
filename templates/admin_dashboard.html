@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<meta name="robots" content="noindex,nofollow">
+{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container page-hero-inner">
+    <h1 class="section-title">Blog <span>Admin</span></h1>
+    <p class="section-sub">Artikel mit einem Klick generieren und veroeffentlichen.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container" style="max-width:760px; display:flex; flex-direction:column; gap:24px;">
+    <div class="contact-form-wrap">
+      {% if error %}
+      <div class="alert alert-error">{{ error }}</div>
+      {% endif %}
+
+      {% if result %}
+      <div class="alert alert-success">
+        Veroeffentlicht: <strong>{{ result.title }}</strong><br>
+        URL: <a href="/blog/{{ result.slug }}/" target="_blank" rel="noopener">/blog/{{ result.slug }}/</a>
+      </div>
+      {% endif %}
+
+      <form method="post" action="/admin/generate/">
+        <div class="form-group">
+          <label class="form-label" for="topic">Thema (optional)</label>
+          <input class="form-control" id="topic" name="topic" type="text" placeholder="Leer lassen = automatische RSS-Quelle und Themenwahl">
+        </div>
+        <button type="submit" class="btn btn-red">Artikel generieren und veroeffentlichen</button>
+      </form>
+    </div>
+
+    <div class="contact-form-wrap" style="padding:20px 24px;">
+      <form method="post" action="/admin/logout/">
+        <button type="submit" class="btn btn-outline">Logout</button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
