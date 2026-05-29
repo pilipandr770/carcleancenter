@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: carcleancenter
+    runtime: python
+    region: frankfurt
+    plan: starter
+    autoDeploy: true
+    buildCommand: pip install -r requirements.txt
+    # idempotent: creates schema/table and adds missing columns safely on every deploy/start
+    startCommand: python -c "from app import init_db; init_db()" && gunicorn wsgi:application
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: "0"
+      - key: DB_SCHEMA
+        value: carcleancenter
+      - key: SECRET_KEY
+        sync: false
+      - key: ADMIN_SECRET
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: BASE_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false

@@ -55,6 +55,12 @@ nano .env  # заполнить все переменные
 python app.py  # тест на localhost:5000
 ```
 
+Если используете Postgres (Render), инициализацию/миграцию можно выполнить отдельно:
+
+```bash
+python -c "from app import init_db; init_db()"
+```
+
 ### 4. Systemd-сервис (production)
 
 ```ini
@@ -110,6 +116,27 @@ server {
 ```bash
 sudo certbot --nginx -d carcleancenter.net -d www.carcleancenter.net
 ```
+
+## Deploy на Render + Postgres schema
+
+### Environment Variables (Render)
+
+- `SECRET_KEY`
+- `ADMIN_SECRET`
+- `ANTHROPIC_API_KEY`
+- `BASE_URL` (например `https://carcleancenter.onrender.com` или ваш домен)
+- `DATABASE_URL` (External Database URL из Render)
+- `DB_SCHEMA` (например `carcleancenter`)
+
+Примечание: при наличии `DATABASE_URL` приложение автоматически переключается на Postgres.
+
+### Build / Start / Release команды
+
+- Build Command: `pip install -r requirements.txt`
+- Start Command: `gunicorn wsgi:application`
+- Release Command (рекомендуется): `python -c "from app import init_db; init_db()"`
+
+Release-команда безопасна для повторного запуска: она создаёт schema, таблицу и добавляет недостающие колонки.
 
 ---
 
@@ -212,7 +239,7 @@ curl -X POST https://carcleancenter.net/api/generate-blog \
 
 ## 🛠️ Технологии
 
-- **Backend:** Python 3.11+, Flask 3.1, SQLite
+- **Backend:** Python 3.11+, Flask 3.1, SQLite/PostgreSQL
 - **Frontend:** HTML5, CSS3 (кастомный dark luxury дизайн), Vanilla JS
 - **AI Blog:** Anthropic Claude API (claude-opus-4-5)
 - **SEO:** Schema.org JSON-LD, Open Graph, robots.txt, sitemap.xml, llms.txt

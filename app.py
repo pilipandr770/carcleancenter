@@ -13,15 +13,35 @@ from flask import (Flask, render_template, request, jsonify,
                    abort, g, make_response)
 from dotenv import load_dotenv
 
+try:
+    import psycopg
+    from psycopg.rows import dict_row
+except Exception:
+    psycopg = None
+    dict_row = None
+
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'change-me-in-production-please')
 
 DATABASE = os.getenv('DATABASE', 'blog.db')
+DATABASE_URL = os.getenv('DATABASE_URL', '').strip()
 ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY', '')
 ADMIN_SECRET = os.getenv('ADMIN_SECRET', 'change_this_secret')
 BASE_URL = os.getenv('BASE_URL', 'https://carcleancenter.net')
+
+
+def normalize_database_url(value: str) -> str:
+    if value.startswith('postgres://'):
+        return 'postgresql://' + value[len('postgres://'):]
+    return value
+
+
+DATABASE_URL = normalize_database_url(DATABASE_URL)
+DB_SCHEMA_RAW = os.getenv('DB_SCHEMA', 'public').strip() or 'public'
+DB_SCHEMA = DB_SCHEMA_RAW if re.match(r'^[A-Za-z_][A-Za-z0-9_]*$', DB_SCHEMA_RAW) else 'public'
+DB_BACKEND = 'postgres' if DATABASE_URL else 'sqlite'
 
 BUSINESS = {
     'name': 'Car Clean Center Rüsselsheim',
@@ -117,11 +137,37 @@ RSS_FEEDS = [
 # ──────────────────────────────────────────────
 # DATABASE
 # ──────────────────────────────────────────────
+def using_postgres() -> bool:
+    return DB_BACKEND == 'postgres'
+
+
+def table_name(name: str) -> str:
+    if using_postgres():
+        return f'"{DB_SCHEMA}".{name}'
+    return name
+
+
+def adapt_query(query: str) -> str:
+    if using_postgres():
+        return query.replace('?', '%s')
+    return query
+
+
+def db_execute(db, query: str, params=()):
+    return db.execute(adapt_query(query), params)
+
+
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
-        db = g._database = sqlite3.connect(DATABASE)
-        db.row_factory = sqlite3.Row
+        if using_postgres():
+            if psycopg is None:
+                raise RuntimeError('DATABASE_URL set but psycopg is not installed. Install dependencies from requirements.txt')
+            db = g._database = psycopg.connect(DATABASE_URL)
+            db.row_factory = dict_row
+        else:
+            db = g._database = sqlite3.connect(DATABASE)
+            db.row_factory = sqlite3.Row
     return db
 
 
@@ -135,20 +181,38 @@ def close_connection(exception):
 def init_db():
     with app.app_context():
         db = get_db()
-        db.execute('''
-            CREATE TABLE IF NOT EXISTS blog_posts (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT NOT NULL,
-                slug TEXT UNIQUE NOT NULL,
-                excerpt TEXT,
-                content TEXT NOT NULL,
-                meta_description TEXT,
-                keywords TEXT,
-                reading_time INTEGER DEFAULT 5,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                published INTEGER DEFAULT 1
-            )
-        ''')
+        posts_table = table_name('blog_posts')
+        if using_postgres():
+            db.execute(f'CREATE SCHEMA IF NOT EXISTS "{DB_SCHEMA}"')
+            db.execute(f'''
+                CREATE TABLE IF NOT EXISTS {posts_table} (
+                    id BIGSERIAL PRIMARY KEY,
+                    title TEXT NOT NULL,
+                    slug TEXT UNIQUE NOT NULL,
+                    excerpt TEXT,
+                    content TEXT NOT NULL,
+                    meta_description TEXT,
+                    keywords TEXT,
+                    reading_time INTEGER DEFAULT 5,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    published INTEGER DEFAULT 1
+                )
+            ''')
+        else:
+            db.execute('''
+                CREATE TABLE IF NOT EXISTS blog_posts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    title TEXT NOT NULL,
+                    slug TEXT UNIQUE NOT NULL,
+                    excerpt TEXT,
+                    content TEXT NOT NULL,
+                    meta_description TEXT,
+                    keywords TEXT,
+                    reading_time INTEGER DEFAULT 5,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    published INTEGER DEFAULT 1
+                )
+            ''')
         ensure_blog_schema(db)
         db.commit()
 
@@ -183,7 +247,17 @@ def parse_feed_datetime(value):
 
 
 def ensure_blog_schema(db):
-    columns = {row['name'] for row in db.execute('PRAGMA table_info(blog_posts)').fetchall()}
+    posts_table = table_name('blog_posts')
+    if using_postgres():
+        rows = db_execute(
+            db,
+            'SELECT column_name FROM information_schema.columns WHERE table_schema=? AND table_name=?',
+            (DB_SCHEMA, 'blog_posts')
+        ).fetchall()
+        columns = {row['column_name'] for row in rows}
+    else:
+        columns = {row['name'] for row in db.execute('PRAGMA table_info(blog_posts)').fetchall()}
+
     extra_columns = {
         'source_feed': 'TEXT',
         'source_title': 'TEXT',
@@ -194,7 +268,7 @@ def ensure_blog_schema(db):
     }
     for column, column_type in extra_columns.items():
         if column not in columns:
-            db.execute(f'ALTER TABLE blog_posts ADD COLUMN {column} {column_type}')
+            db.execute(f'ALTER TABLE {posts_table} ADD COLUMN {column} {column_type}')
 
 
 def fetch_rss_entries(feed_url):
@@ -227,9 +301,11 @@ def fetch_rss_entries(feed_url):
 
 
 def get_daily_inspiration(db):
+    posts_table = table_name('blog_posts')
     used_urls = {
-        row['source_url'] for row in db.execute(
-            'SELECT source_url FROM blog_posts WHERE source_url IS NOT NULL AND source_url != ""'
+        row['source_url'] for row in db_execute(
+            db,
+            f'SELECT source_url FROM {posts_table} WHERE source_url IS NOT NULL AND source_url != ""'
         ).fetchall()
     }
 
@@ -352,8 +428,10 @@ def generate_blog_post(topic: str, source: dict | None = None) -> dict:
 @app.route('/')
 def index():
     db = get_db()
-    recent_posts = db.execute(
-        'SELECT * FROM blog_posts WHERE published=1 ORDER BY created_at DESC LIMIT 3'
+    posts_table = table_name('blog_posts')
+    recent_posts = db_execute(
+        db,
+        f'SELECT * FROM {posts_table} WHERE published=1 ORDER BY created_at DESC LIMIT 3'
     ).fetchall()
     return render_template('index.html',
                            business=BUSINESS, services=SERVICES,
@@ -398,8 +476,10 @@ def galerie():
 @app.route('/blog/')
 def blog():
     db = get_db()
-    posts = db.execute(
-        'SELECT * FROM blog_posts WHERE published=1 ORDER BY created_at DESC'
+    posts_table = table_name('blog_posts')
+    posts = db_execute(
+        db,
+        f'SELECT * FROM {posts_table} WHERE published=1 ORDER BY created_at DESC'
     ).fetchall()
     return render_template('blog.html',
                            business=BUSINESS, posts=posts,
@@ -411,13 +491,17 @@ def blog():
 @app.route('/blog/<slug>/')
 def blog_post(slug):
     db = get_db()
-    post = db.execute(
-        'SELECT * FROM blog_posts WHERE slug=? AND published=1', (slug,)
+    posts_table = table_name('blog_posts')
+    post = db_execute(
+        db,
+        f'SELECT * FROM {posts_table} WHERE slug=? AND published=1',
+        (slug,)
     ).fetchone()
     if not post:
         abort(404)
-    other_posts = db.execute(
-        'SELECT * FROM blog_posts WHERE published=1 AND slug!=? ORDER BY created_at DESC LIMIT 3',
+    other_posts = db_execute(
+        db,
+        f'SELECT * FROM {posts_table} WHERE published=1 AND slug!=? ORDER BY created_at DESC LIMIT 3',
         (slug,)
     ).fetchall()
     faq_items = []
@@ -501,7 +585,8 @@ def api_generate_blog():
         return jsonify({'success': False, 'error': 'ANTHROPIC_API_KEY not set'}), 500
 
     db = get_db()
-    existing = [r['title'] for r in db.execute('SELECT title FROM blog_posts').fetchall()]
+    posts_table = table_name('blog_posts')
+    existing = [r['title'] for r in db_execute(db, f'SELECT title FROM {posts_table}').fetchall()]
     unused = [t for t in BLOG_TOPICS
               if not any(slugify(t[:25]) in slugify(e[:25]) for e in existing)]
     source = None
@@ -515,7 +600,7 @@ def api_generate_blog():
         slug = slugify(post_data['title'])
         base = slug
         i = 1
-        while db.execute('SELECT id FROM blog_posts WHERE slug=?', (slug,)).fetchone():
+        while db_execute(db, f'SELECT id FROM {posts_table} WHERE slug=?', (slug,)).fetchone():
             slug = f'{base}-{i}'; i += 1
 
         source_title = source['title'] if source else ''
@@ -523,8 +608,8 @@ def api_generate_blog():
         source_feed = source['source_feed'] if source else ''
         source_excerpt = source['summary'] if source else ''
 
-        db.execute('''
-            INSERT INTO blog_posts (title, slug, excerpt, content, meta_description, keywords, reading_time, source_feed, source_title, source_url, source_excerpt, tags, faq_json)
+        db_execute(db, f'''
+            INSERT INTO {posts_table} (title, slug, excerpt, content, meta_description, keywords, reading_time, source_feed, source_title, source_url, source_excerpt, tags, faq_json)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (post_data['title'], slug, post_data.get('excerpt', ''),
               post_data['content'], post_data.get('meta_description', ''),
@@ -572,8 +657,10 @@ RSS: {BASE_URL}/rss.xml
 @app.route('/sitemap.xml')
 def sitemap_xml():
     db = get_db()
-    posts = db.execute(
-        'SELECT slug, created_at FROM blog_posts WHERE published=1'
+    posts_table = table_name('blog_posts')
+    posts = db_execute(
+        db,
+        f'SELECT slug, created_at FROM {posts_table} WHERE published=1'
     ).fetchall()
 
     static_pages = [
@@ -616,8 +703,10 @@ def sitemap_xml():
 @app.route('/rss.xml')
 def rss_xml():
     db = get_db()
-    posts = db.execute(
-        'SELECT title, slug, excerpt, created_at, keywords FROM blog_posts WHERE published=1 ORDER BY created_at DESC LIMIT 20'
+    posts_table = table_name('blog_posts')
+    posts = db_execute(
+        db,
+        f'SELECT title, slug, excerpt, created_at, keywords FROM {posts_table} WHERE published=1 ORDER BY created_at DESC LIMIT 20'
     ).fetchall()
 
     xml = ['<?xml version="1.0" encoding="UTF-8"?>',
@@ -653,8 +742,10 @@ def rss_xml():
 @app.route('/llms.txt')
 def llms_txt():
     db = get_db()
-    posts = db.execute(
-        'SELECT title, slug, excerpt FROM blog_posts WHERE published=1 ORDER BY created_at DESC LIMIT 15'
+    posts_table = table_name('blog_posts')
+    posts = db_execute(
+        db,
+        f'SELECT title, slug, excerpt FROM {posts_table} WHERE published=1 ORDER BY created_at DESC LIMIT 15'
     ).fetchall()
 
     blog_lines = '\n'.join(
