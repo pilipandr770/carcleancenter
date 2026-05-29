@@ -133,7 +133,7 @@ sudo certbot --nginx -d carcleancenter.net -d www.carcleancenter.net
 ### Build / Start / Release команды
 
 - Build Command: `pip install -r requirements.txt`
-- Start Command: `gunicorn wsgi:application`
+- Start Command: `gunicorn --workers 2 --timeout 180 wsgi:application`
 - Release Command (рекомендуется): `python -c "from app import init_db; init_db()"`
 
 Release-команда безопасна для повторного запуска: она создаёт schema, таблицу и добавляет недостающие колонки.

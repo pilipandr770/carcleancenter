@@ -7,7 +7,7 @@ services:
     autoDeploy: true
     buildCommand: pip install -r requirements.txt
     # idempotent: creates schema/table and adds missing columns safely on every deploy/start
-    startCommand: python -c "from app import init_db; init_db()" && gunicorn wsgi:application
+    startCommand: python -c "from app import init_db; init_db()" && gunicorn --workers 2 --timeout 180 wsgi:application
     healthCheckPath: /
     envVars:
       - key: PYTHON_VERSION
