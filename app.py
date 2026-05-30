@@ -29,7 +29,7 @@ DATABASE = os.getenv('DATABASE', 'blog.db')
 DATABASE_URL = os.getenv('DATABASE_URL', '').strip()
 ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY', '')
 ANTHROPIC_REQUEST_TIMEOUT = float(os.getenv('ANTHROPIC_REQUEST_TIMEOUT', '55'))
-ANTHROPIC_MAX_TOKENS = int(os.getenv('ANTHROPIC_MAX_TOKENS', '2600'))
+ANTHROPIC_MAX_TOKENS = int(os.getenv('ANTHROPIC_MAX_TOKENS', '3200'))
 ADMIN_SECRET = os.getenv('ADMIN_SECRET', 'change_this_secret')
 BASE_URL = os.getenv('BASE_URL', 'https://carcleancenter.net')
 
@@ -495,6 +495,21 @@ JSON-Format (exakt so):
 # ──────────────────────────────────────────────
 # BLOG GENERATION
 # ──────────────────────────────────────────────
+def parse_ai_json_payload(raw: str) -> dict:
+    cleaned = (raw or '').strip()
+    cleaned = re.sub(r'^```json\s*', '', cleaned)
+    cleaned = re.sub(r'^```\s*', '', cleaned)
+    cleaned = re.sub(r'\s*```$', '', cleaned)
+
+    start = cleaned.find('{')
+    end = cleaned.rfind('}')
+    if start == -1 or end == -1 or end <= start:
+        raise ValueError('Kein JSON-Objekt im KI-Output gefunden.')
+
+    payload = cleaned[start:end + 1]
+    return json.loads(payload)
+
+
 def generate_blog_post(topic: str, source: dict | None = None, recent_titles: list[str] | None = None) -> dict:
     import anthropic
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, timeout=ANTHROPIC_REQUEST_TIMEOUT)
@@ -512,11 +527,28 @@ def generate_blog_post(topic: str, source: dict | None = None, recent_titles: li
             f'Fehler bei der KI-Generierung (Timeout/Netzwerk). Bitte erneut versuchen oder ANTHROPIC_REQUEST_TIMEOUT erhoehen. Details: {e}'
         ) from e
 
-    raw = message.content[0].text.strip()
-    raw = re.sub(r'^```json\s*', '', raw)
-    raw = re.sub(r'^```\s*', '', raw)
-    raw = re.sub(r'\s*```$', '', raw)
-    return json.loads(raw)
+    raw = (message.content[0].text if message and message.content else '').strip()
+    try:
+        return parse_ai_json_payload(raw)
+    except Exception:
+        retry_prompt = (
+            prompt
+            + "\n\nWICHTIGER RETRY: Dein vorheriger Output war kein valides JSON. "
+              "Antworte jetzt mit genau EINEM validen JSON-Objekt entsprechend dem Schema, ohne Zusatztext."
+        )
+        try:
+            retry = client.messages.create(
+                model="claude-haiku-4-5",
+                max_tokens=ANTHROPIC_MAX_TOKENS,
+                messages=[{"role": "user", "content": retry_prompt}]
+            )
+            retry_raw = (retry.content[0].text if retry and retry.content else '').strip()
+            return parse_ai_json_payload(retry_raw)
+        except Exception as e:
+            snippet = (raw[:500] + '...') if len(raw) > 500 else raw
+            raise RuntimeError(
+                f'KI-Antwort konnte nicht als JSON verarbeitet werden. Details: {e}. Rohantwort (gekürzt): {snippet}'
+            ) from e
 
 
 # ──────────────────────────────────────────────
