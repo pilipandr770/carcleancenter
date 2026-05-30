@@ -28,6 +28,8 @@ app.secret_key = os.getenv('SECRET_KEY', 'change-me-in-production-please')
 DATABASE = os.getenv('DATABASE', 'blog.db')
 DATABASE_URL = os.getenv('DATABASE_URL', '').strip()
 ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY', '')
+ANTHROPIC_REQUEST_TIMEOUT = float(os.getenv('ANTHROPIC_REQUEST_TIMEOUT', '55'))
+ANTHROPIC_MAX_TOKENS = int(os.getenv('ANTHROPIC_MAX_TOKENS', '2600'))
 ADMIN_SECRET = os.getenv('ADMIN_SECRET', 'change_this_secret')
 BASE_URL = os.getenv('BASE_URL', 'https://carcleancenter.net')
 
@@ -456,7 +458,7 @@ JSON-Format (exakt so):
         {{ "question": "Frage 1", "answer": "Antwort 1" }},
         {{ "question": "Frage 2", "answer": "Antwort 2" }}
     ],
-  "content": "Vollständiger HTML-Artikel-Content. Verwende <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>. Mindestens 900 Wörter. Integriere Keywords natürlich: 'Autopflege Rüsselsheim', 'Car Clean Center', 'Fahrzeugaufbereitung'. Strukturiere mit mehreren H2-Abschnitten. Ende mit CTA zum Car Clean Center Rüsselsheim mit Link: <a href='https://carcleancenter.net/kontakt/'>Jetzt Termin vereinbaren</a>.",
+    "content": "Vollständiger HTML-Artikel-Content. Verwende <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>. Mindestens 700 Wörter. Integriere Keywords natürlich: 'Autopflege Rüsselsheim', 'Car Clean Center', 'Fahrzeugaufbereitung'. Strukturiere mit mehreren H2-Abschnitten. Ende mit CTA zum Car Clean Center Rüsselsheim mit Link: <a href='https://carcleancenter.net/kontakt/'>Jetzt Termin vereinbaren</a>.",
   "reading_time": 7
 }}"""
 
@@ -485,7 +487,7 @@ JSON-Format (exakt so):
         {{ "question": "Frage 1", "answer": "Antwort 1" }},
         {{ "question": "Frage 2", "answer": "Antwort 2" }}
     ],
-  "content": "Vollständiger HTML-Artikel-Content. Verwende <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>. Mindestens 800 Wörter. Integriere Keywords natürlich: 'Autopflege Rüsselsheim', 'Car Clean Center', 'Fahrzeugaufbereitung'. Strukturiere mit mehreren H2-Abschnitten. Ende mit CTA zum Car Clean Center Rüsselsheim mit Link: <a href='https://carcleancenter.net/kontakt/'>Jetzt Termin vereinbaren</a>.",
+    "content": "Vollständiger HTML-Artikel-Content. Verwende <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>. Mindestens 650 Wörter. Integriere Keywords natürlich: 'Autopflege Rüsselsheim', 'Car Clean Center', 'Fahrzeugaufbereitung'. Strukturiere mit mehreren H2-Abschnitten. Ende mit CTA zum Car Clean Center Rüsselsheim mit Link: <a href='https://carcleancenter.net/kontakt/'>Jetzt Termin vereinbaren</a>.",
   "reading_time": 6
 }}"""
 
@@ -495,15 +497,20 @@ JSON-Format (exakt so):
 # ──────────────────────────────────────────────
 def generate_blog_post(topic: str, source: dict | None = None, recent_titles: list[str] | None = None) -> dict:
     import anthropic
-    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, timeout=ANTHROPIC_REQUEST_TIMEOUT)
 
     prompt = build_blog_prompt(topic, source, recent_titles=recent_titles)
 
-    message = client.messages.create(
-        model="claude-haiku-4-5",
-        max_tokens=4000,
-        messages=[{"role": "user", "content": prompt}]
-    )
+    try:
+        message = client.messages.create(
+            model="claude-haiku-4-5",
+            max_tokens=ANTHROPIC_MAX_TOKENS,
+            messages=[{"role": "user", "content": prompt}]
+        )
+    except Exception as e:
+        raise RuntimeError(
+            f'Fehler bei der KI-Generierung (Timeout/Netzwerk). Bitte erneut versuchen oder ANTHROPIC_REQUEST_TIMEOUT erhoehen. Details: {e}'
+        ) from e
 
     raw = message.content[0].text.strip()
     raw = re.sub(r'^```json\s*', '', raw)
