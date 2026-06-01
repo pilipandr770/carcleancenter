@@ -45,6 +45,31 @@ def allowed_file(filename: str) -> bool:
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+def is_local_gallery_src(src: str | None) -> bool:
+    return bool(src) and src.startswith('/static/img/gallery/')
+
+
+def delete_local_gallery_file(src: str | None) -> None:
+    if not is_local_gallery_src(src):
+        return
+    file_path = os.path.join(os.path.dirname(__file__), src.lstrip('/'))
+    try:
+        os.remove(file_path)
+    except OSError:
+        pass
+
+
+def save_uploaded_gallery_file(file_storage):
+    if not file_storage or not file_storage.filename:
+        return None
+    if not allowed_file(file_storage.filename):
+        raise ValueError('Ungültiges Dateiformat. Erlaubt: JPG, PNG, WEBP, GIF.')
+    ext = file_storage.filename.rsplit('.', 1)[1].lower()
+    filename = f'{uuid.uuid4().hex}.{ext}'
+    file_storage.save(os.path.join(GALLERY_UPLOAD_FOLDER, filename))
+    return f'/static/img/gallery/{filename}'
+
+
 def get_effective_base_url() -> str:
     configured = (BASE_URL or '').strip()
     if configured:
@@ -679,25 +704,20 @@ def admin_gallery_upload():
     title = request.form.get('title', '').strip()
     sort_order = int(request.form.get('sort_order', 0) or 0)
 
-    def save_image(field_name, url_field_name) -> str | None:
-        """Returns src string (relative path or URL) or None on error."""
-        file = request.files.get(field_name)
-        if file and file.filename:
-            if not allowed_file(file.filename):
-                return None
-            ext = file.filename.rsplit('.', 1)[1].lower()
-            filename = f'{uuid.uuid4().hex}.{ext}'
-            file.save(os.path.join(GALLERY_UPLOAD_FOLDER, filename))
-            return f'/static/img/gallery/{filename}'
-        url = request.form.get(url_field_name, '').strip()
-        return url if url else None
+    try:
+        before_uploaded = save_uploaded_gallery_file(request.files.get('before_file'))
+        after_uploaded = save_uploaded_gallery_file(request.files.get('after_file'))
+    except ValueError as e:
+        before_uploaded = None
+        after_uploaded = None
+        error = str(e)
 
-    before_src = save_image('before_file', 'before_url')
-    after_src = save_image('after_file', 'after_url')
+    before_src = before_uploaded or request.form.get('before_url', '').strip()
+    after_src = after_uploaded or request.form.get('after_url', '').strip()
 
-    if not before_src or not after_src:
+    if not error and (not before_src or not after_src):
         error = 'Bitte Bild "Vorher" und "Nachher" angeben (Datei oder URL).'
-    else:
+    elif not error:
         db_execute(
             db,
             f'INSERT INTO {table_name("gallery_pairs")} (title, before_src, after_src, sort_order) VALUES (?, ?, ?, ?)',
@@ -705,6 +725,94 @@ def admin_gallery_upload():
         )
         db.commit()
         result = 'Bildpaar erfolgreich hinzugefügt.'
+
+    pairs = db_execute(
+        db,
+        f'SELECT * FROM {table_name("gallery_pairs")} ORDER BY sort_order ASC, created_at DESC'
+    ).fetchall()
+    return render_template('admin_gallery.html',
+                           business=BUSINESS,
+                           pairs=pairs,
+                           result=result,
+                           error=error,
+                           page_title='Galerie verwalten | Admin',
+                           page_desc='',
+                           canonical='/admin/gallery/')
+
+
+@app.route('/admin/gallery/update/<int:pair_id>/', methods=['POST'])
+def admin_gallery_update(pair_id):
+    if not admin_is_authenticated():
+        return redirect(url_for('admin_login'))
+
+    db = get_db()
+    row = db_execute(
+        db,
+        f'SELECT * FROM {table_name("gallery_pairs")} WHERE id=?',
+        (pair_id,)
+    ).fetchone()
+    if not row:
+        return redirect(url_for('admin_gallery'))
+
+    error = None
+    result = None
+    title = request.form.get('title', '').strip()
+    sort_order = int(request.form.get('sort_order', row['sort_order'] or 0) or 0)
+
+    try:
+        before_uploaded = save_uploaded_gallery_file(request.files.get('before_file'))
+        after_uploaded = save_uploaded_gallery_file(request.files.get('after_file'))
+    except ValueError as e:
+        before_uploaded = None
+        after_uploaded = None
+        error = str(e)
+
+    new_before = row['before_src']
+    new_after = row['after_src']
+
+    before_url = request.form.get('before_url', '').strip()
+    after_url = request.form.get('after_url', '').strip()
+    remove_before = request.form.get('remove_before') == '1'
+    remove_after = request.form.get('remove_after') == '1'
+    delete_before_old = False
+    delete_after_old = False
+
+    if not error:
+        if before_uploaded:
+            new_before = before_uploaded
+            delete_before_old = before_uploaded != row['before_src']
+        elif before_url:
+            new_before = before_url
+            delete_before_old = before_url != row['before_src']
+        elif remove_before:
+            new_before = ''
+            delete_before_old = True
+
+        if after_uploaded:
+            new_after = after_uploaded
+            delete_after_old = after_uploaded != row['after_src']
+        elif after_url:
+            new_after = after_url
+            delete_after_old = after_url != row['after_src']
+        elif remove_after:
+            new_after = ''
+            delete_after_old = True
+
+        if not new_before or not new_after:
+            error = 'Ein Bildpaar braucht immer beide Seiten: Vorher und Nachher.'
+
+    if not error:
+        db_execute(
+            db,
+            f'UPDATE {table_name("gallery_pairs")} SET title=?, before_src=?, after_src=?, sort_order=? WHERE id=?',
+            (title or None, new_before, new_after, sort_order, pair_id)
+        )
+        db.commit()
+        if delete_before_old:
+            delete_local_gallery_file(row['before_src'])
+        if delete_after_old:
+            delete_local_gallery_file(row['after_src'])
+        result = 'Bildpaar aktualisiert.'
 
     pairs = db_execute(
         db,
@@ -731,14 +839,8 @@ def admin_gallery_delete(pair_id):
         (pair_id,)
     ).fetchone()
     if row:
-        # Remove local files if they were uploaded (not external URLs)
-        for src in (row['before_src'], row['after_src']):
-            if src and src.startswith('/static/img/gallery/'):
-                file_path = os.path.join(os.path.dirname(__file__), src.lstrip('/'))
-                try:
-                    os.remove(file_path)
-                except OSError:
-                    pass
+        delete_local_gallery_file(row['before_src'])
+        delete_local_gallery_file(row['after_src'])
         db_execute(db, f'DELETE FROM {table_name("gallery_pairs")} WHERE id=?', (pair_id,))
         db.commit()
     return redirect(url_for('admin_gallery'))
