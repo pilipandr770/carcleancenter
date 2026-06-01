@@ -37,8 +37,11 @@ ADMIN_SECRET = os.getenv('ADMIN_SECRET', 'change_this_secret')
 BASE_URL = os.getenv('BASE_URL', '').strip() or 'https://car-clean-center.net'
 
 GALLERY_UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'img', 'gallery')
+CONTENT_UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'img', 'content')
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'webp', 'gif'}
 Path(GALLERY_UPLOAD_FOLDER).mkdir(parents=True, exist_ok=True)
+Path(CONTENT_UPLOAD_FOLDER).mkdir(parents=True, exist_ok=True)
+DEFAULT_HOME_ABOUT_IMAGE = 'https://car-clean-center.net/wp-content/uploads/2021/04/about-company-image.png'
 
 
 def allowed_file(filename: str) -> bool:
@@ -68,6 +71,31 @@ def save_uploaded_gallery_file(file_storage):
     filename = f'{uuid.uuid4().hex}.{ext}'
     file_storage.save(os.path.join(GALLERY_UPLOAD_FOLDER, filename))
     return f'/static/img/gallery/{filename}'
+
+
+def is_local_content_src(src: str | None) -> bool:
+    return bool(src) and src.startswith('/static/img/content/')
+
+
+def delete_local_content_file(src: str | None) -> None:
+    if not is_local_content_src(src):
+        return
+    file_path = os.path.join(os.path.dirname(__file__), src.lstrip('/'))
+    try:
+        os.remove(file_path)
+    except OSError:
+        pass
+
+
+def save_uploaded_content_file(file_storage):
+    if not file_storage or not file_storage.filename:
+        return None
+    if not allowed_file(file_storage.filename):
+        raise ValueError('Ungültiges Dateiformat. Erlaubt: JPG, PNG, WEBP, GIF.')
+    ext = file_storage.filename.rsplit('.', 1)[1].lower()
+    filename = f'{uuid.uuid4().hex}.{ext}'
+    file_storage.save(os.path.join(CONTENT_UPLOAD_FOLDER, filename))
+    return f'/static/img/content/{filename}'
 
 
 def get_effective_base_url() -> str:
@@ -297,7 +325,68 @@ def init_db():
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             ''')
+
+        settings_table = table_name('site_settings')
+        if using_postgres():
+            db.execute(f'''
+                CREATE TABLE IF NOT EXISTS {settings_table} (
+                    key_name TEXT PRIMARY KEY,
+                    value TEXT,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+        else:
+            db.execute('''
+                CREATE TABLE IF NOT EXISTS site_settings (
+                    key_name TEXT PRIMARY KEY,
+                    value TEXT,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+
+        existing_about = db_execute(
+            db,
+            f'SELECT value FROM {settings_table} WHERE key_name=?',
+            ('home_about_image',)
+        ).fetchone()
+        if not existing_about:
+            db_execute(
+                db,
+                f'INSERT INTO {settings_table} (key_name, value) VALUES (?, ?)',
+                ('home_about_image', DEFAULT_HOME_ABOUT_IMAGE)
+            )
         db.commit()
+
+
+def get_site_setting(db, key_name: str, default: str = '') -> str:
+    row = db_execute(
+        db,
+        f'SELECT value FROM {table_name("site_settings")} WHERE key_name=?',
+        (key_name,)
+    ).fetchone()
+    if not row:
+        return default
+    return (row['value'] or default)
+
+
+def upsert_site_setting(db, key_name: str, value: str) -> None:
+    exists = db_execute(
+        db,
+        f'SELECT key_name FROM {table_name("site_settings")} WHERE key_name=?',
+        (key_name,)
+    ).fetchone()
+    if exists:
+        db_execute(
+            db,
+            f'UPDATE {table_name("site_settings")} SET value=?, updated_at=CURRENT_TIMESTAMP WHERE key_name=?',
+            (value, key_name)
+        )
+    else:
+        db_execute(
+            db,
+            f'INSERT INTO {table_name("site_settings")} (key_name, value) VALUES (?, ?)',
+            (key_name, value)
+        )
 
 
 def slugify(text):
@@ -625,12 +714,14 @@ def generate_blog_post(topic: str, source: dict | None = None, recent_titles: li
 def index():
     db = get_db()
     posts_table = table_name('blog_posts')
+    home_about_image = get_site_setting(db, 'home_about_image', DEFAULT_HOME_ABOUT_IMAGE)
     recent_posts = db_execute(
         db,
         f'SELECT * FROM {posts_table} WHERE published=1 ORDER BY created_at DESC LIMIT 3'
     ).fetchall()
     return render_template('index.html',
                            business=BUSINESS, services=SERVICES,
+                           home_about_image=home_about_image,
                            recent_posts=recent_posts,
                            page_title='Autopflege Rüsselsheim – Car Clean Center',
                            page_desc='Professionelle Autopflege & Fahrzeugaufbereitung in Rüsselsheim am Main. Handwäsche, Politur, Keramikversiegelung. Jetzt Termin vereinbaren!',
@@ -1006,6 +1097,33 @@ def admin_is_authenticated() -> bool:
     return bool(session.get('admin_authenticated'))
 
 
+def render_admin_dashboard(result=None, error=None, home_result=None, home_error=None):
+    db = get_db()
+    posts_table = table_name('blog_posts')
+    posts = db_execute(
+        db,
+        f'''SELECT id, title, slug, created_at, source_feed, source_url
+            FROM {posts_table}
+            ORDER BY created_at DESC
+            LIMIT 50'''
+    ).fetchall()
+    home_about_image = get_site_setting(db, 'home_about_image', DEFAULT_HOME_ABOUT_IMAGE)
+
+    return render_template(
+        'admin_dashboard.html',
+        business=BUSINESS,
+        posts=posts,
+        result=result,
+        error=error,
+        home_result=home_result,
+        home_error=home_error,
+        home_about_image=home_about_image,
+        page_title='Admin Dashboard | Car Clean Center',
+        page_desc='Interne Blog-Verwaltung',
+        canonical='/admin/dashboard/'
+    )
+
+
 @app.route('/admin/', methods=['GET', 'POST'])
 def admin_login():
     if admin_is_authenticated():
@@ -1033,27 +1151,7 @@ def admin_login():
 def admin_dashboard():
     if not admin_is_authenticated():
         return redirect(url_for('admin_login'))
-
-    db = get_db()
-    posts_table = table_name('blog_posts')
-    posts = db_execute(
-        db,
-        f'''SELECT id, title, slug, created_at, source_feed, source_url
-            FROM {posts_table}
-            ORDER BY created_at DESC
-            LIMIT 50'''
-    ).fetchall()
-
-    return render_template(
-        'admin_dashboard.html',
-        business=BUSINESS,
-        posts=posts,
-        result=None,
-        error=None,
-        page_title='Admin Dashboard | Car Clean Center',
-        page_desc='Interne Blog-Verwaltung',
-        canonical='/admin/dashboard/'
-    )
+    return render_admin_dashboard(result=None, error=None, home_result=None, home_error=None)
 
 
 @app.route('/admin/generate/', methods=['POST'])
@@ -1069,26 +1167,39 @@ def admin_generate_blog():
     except Exception as e:
         error = str(e)
 
-    db = get_db()
-    posts_table = table_name('blog_posts')
-    posts = db_execute(
-        db,
-        f'''SELECT id, title, slug, created_at, source_feed, source_url
-            FROM {posts_table}
-            ORDER BY created_at DESC
-            LIMIT 50'''
-    ).fetchall()
+    return render_admin_dashboard(result=result, error=error, home_result=None, home_error=None)
 
-    return render_template(
-        'admin_dashboard.html',
-        business=BUSINESS,
-        posts=posts,
-        result=result,
-        error=error,
-        page_title='Admin Dashboard | Car Clean Center',
-        page_desc='Interne Blog-Verwaltung',
-        canonical='/admin/dashboard/'
-    )
+
+@app.route('/admin/home-image/', methods=['POST'])
+def admin_home_image_update():
+    if not admin_is_authenticated():
+        return redirect(url_for('admin_login'))
+
+    db = get_db()
+    current_src = get_site_setting(db, 'home_about_image', DEFAULT_HOME_ABOUT_IMAGE)
+
+    error = None
+    result = None
+    try:
+        uploaded_src = save_uploaded_content_file(request.files.get('home_about_file'))
+    except ValueError as e:
+        uploaded_src = None
+        error = str(e)
+
+    submitted_url = (request.form.get('home_about_url') or '').strip()
+    new_src = uploaded_src or submitted_url
+
+    if not error and not new_src:
+        error = 'Bitte Bild als Datei hochladen oder eine URL eintragen.'
+
+    if not error:
+        upsert_site_setting(db, 'home_about_image', new_src)
+        db.commit()
+        if current_src != new_src:
+            delete_local_content_file(current_src)
+        result = 'Foto auf der Startseite wurde aktualisiert.'
+
+    return render_admin_dashboard(result=None, error=None, home_result=result, home_error=error)
 
 
 @app.route('/admin/delete/<int:post_id>/', methods=['POST'])

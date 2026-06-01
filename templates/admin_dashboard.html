@@ -40,6 +40,40 @@
     </div>
 
     <div class="contact-form-wrap">
+      <h2 style="font-size:1.2rem;margin-bottom:14px;color:var(--text);">Foto auf der Startseite (Über uns)</h2>
+
+      {% if home_error %}
+      <div class="alert alert-error" style="margin-bottom:12px;">{{ home_error }}</div>
+      {% endif %}
+      {% if home_result %}
+      <div class="alert alert-success" style="margin-bottom:12px;">{{ home_result }}</div>
+      {% endif %}
+
+      <div style="display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start;">
+        <div>
+          <img src="{{ home_about_image }}" alt="Aktuelles Foto auf der Startseite"
+               style="width:100%;max-width:220px;aspect-ratio:4/3;object-fit:cover;border-radius:10px;border:1px solid var(--border);background:var(--bg2);">
+          <div style="font-size:.78rem;color:var(--text-dim);margin-top:8px;word-break:break-all;">{{ home_about_image }}</div>
+        </div>
+
+        <form method="post" action="/admin/home-image/" enctype="multipart/form-data">
+          <div class="form-group">
+            <label class="form-label" for="home-about-url">Neue Bild-URL (optional)</label>
+            <input class="form-control" id="home-about-url" name="home_about_url" type="url" placeholder="https://...">
+          </div>
+          <div class="form-group" style="margin-top:10px;">
+            <label class="form-label" for="home-about-file">Oder Datei hochladen (JPG/PNG/WEBP/GIF)</label>
+            <input class="form-control" id="home-about-file" name="home_about_file" type="file" accept="image/*" style="padding:4px 8px;">
+          </div>
+          <p class="text-muted" style="font-size:.82rem;margin:8px 0 14px;">
+            Wenn URL und Datei gleichzeitig angegeben sind, wird die Datei verwendet.
+          </p>
+          <button type="submit" class="btn btn-outline btn-sm">Foto aktualisieren</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="contact-form-wrap">
       <h2 style="font-size:1.2rem;margin-bottom:16px;color:var(--text);">Letzte Artikel</h2>
       {% if posts %}
       <div style="display:flex;flex-direction:column;gap:12px;">
