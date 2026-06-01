@@ -93,7 +93,7 @@ sudo systemctl start carcleancenter
 ```nginx
 server {
     listen 80;
-    server_name carcleancenter.net www.carcleancenter.net;
+    server_name car-clean-center.net www.car-clean-center.net;
 
     location / {
         proxy_pass http://127.0.0.1:8000;
@@ -114,7 +114,7 @@ server {
 ### 6. SSL (Let's Encrypt)
 
 ```bash
-sudo certbot --nginx -d carcleancenter.net -d www.carcleancenter.net
+sudo certbot --nginx -d car-clean-center.net -d www.car-clean-center.net
 ```
 
 ## Deploy на Render + Postgres schema
@@ -156,7 +156,7 @@ Release-команда безопасна для повторного запус
 ### Разовый запуск
 
 ```bash
-curl -X POST https://carcleancenter.net/api/generate-blog \
+curl -X POST https://car-clean-center.net/api/generate-blog \
   -H "X-Admin-Secret: YOUR_ADMIN_SECRET" \
   -H "Content-Type: application/json" \
   -d '{}'
@@ -165,7 +165,7 @@ curl -X POST https://carcleancenter.net/api/generate-blog \
 ### Конкретная тема
 
 ```bash
-curl -X POST https://carcleancenter.net/api/generate-blog \
+curl -X POST https://car-clean-center.net/api/generate-blog \
   -H "X-Admin-Secret: YOUR_ADMIN_SECRET" \
   -H "Content-Type: application/json" \
   -d '{"topic": "Keramikversiegelung Rüsselsheim – Lohnt es sich?"}'
