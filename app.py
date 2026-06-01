@@ -1267,6 +1267,12 @@ RSS: {base_url}/rss.xml
     return make_response(content, 200, {'Content-Type': 'text/plain; charset=utf-8'})
 
 
+@app.route('/google712363e6026d3a8d.html')
+def google_site_verification():
+    content = 'google-site-verification: google712363e6026d3a8d.html'
+    return make_response(content, 200, {'Content-Type': 'text/html; charset=utf-8'})
+
+
 @app.route('/sitemap.xml')
 def sitemap_xml():
     base_url = get_effective_base_url()
