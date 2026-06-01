@@ -3,14 +3,17 @@ import sqlite3
 import json
 import re
 import random
+import uuid
 import requests
 import xml.etree.ElementTree as ET
 from html import unescape
 from email.utils import parsedate_to_datetime
 from xml.sax.saxutils import escape as xml_escape
 from datetime import datetime
+from pathlib import Path
 from flask import (Flask, render_template, request, jsonify,
                    abort, g, make_response, redirect, session, url_for)
+from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
 try:
@@ -32,6 +35,14 @@ ANTHROPIC_REQUEST_TIMEOUT = float(os.getenv('ANTHROPIC_REQUEST_TIMEOUT', '55'))
 ANTHROPIC_MAX_TOKENS = int(os.getenv('ANTHROPIC_MAX_TOKENS', '3200'))
 ADMIN_SECRET = os.getenv('ADMIN_SECRET', 'change_this_secret')
 BASE_URL = os.getenv('BASE_URL', '').strip() or 'https://car-clean-center.net'
+
+GALLERY_UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'img', 'gallery')
+ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'webp', 'gif'}
+Path(GALLERY_UPLOAD_FOLDER).mkdir(parents=True, exist_ok=True)
+
+
+def allowed_file(filename: str) -> bool:
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def get_effective_base_url() -> str:
@@ -237,6 +248,30 @@ def init_db():
                 )
             ''')
         ensure_blog_schema(db)
+        # Gallery pairs table
+        gallery_table = table_name('gallery_pairs')
+        if using_postgres():
+            db.execute(f'''
+                CREATE TABLE IF NOT EXISTS {gallery_table} (
+                    id BIGSERIAL PRIMARY KEY,
+                    title TEXT,
+                    before_src TEXT NOT NULL,
+                    after_src TEXT NOT NULL,
+                    sort_order INTEGER DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+        else:
+            db.execute('''
+                CREATE TABLE IF NOT EXISTS gallery_pairs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    title TEXT,
+                    before_src TEXT NOT NULL,
+                    after_src TEXT NOT NULL,
+                    sort_order INTEGER DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
         db.commit()
 
 
@@ -597,16 +632,116 @@ def preisliste():
 
 @app.route('/galerie/')
 def galerie():
-    gallery_images = [
-        f'https://car-clean-center.net/wp-content/uploads/2025/06/{i}.jpg'
-        for i in range(19, 37)
-    ]
+    db = get_db()
+    pairs = db_execute(
+        db,
+        f'SELECT * FROM {table_name("gallery_pairs")} ORDER BY sort_order ASC, created_at DESC'
+    ).fetchall()
     return render_template('galerie.html',
                            business=BUSINESS,
-                           images=gallery_images,
+                           pairs=pairs,
                            page_title='Galerie – Vorher/Nachher | Car Clean Center Rüsselsheim',
                            page_desc='Beeindruckende Ergebnisse unserer professionellen Autopflege in Rüsselsheim. Vorher/Nachher Bilder aus unserem Autopflege-Studio.',
                            canonical='/galerie/')
+
+
+# ──────────────────────────────────────────────
+# ADMIN GALLERY
+# ──────────────────────────────────────────────
+@app.route('/admin/gallery/')
+def admin_gallery():
+    if not admin_is_authenticated():
+        return redirect(url_for('admin_login'))
+    db = get_db()
+    pairs = db_execute(
+        db,
+        f'SELECT * FROM {table_name("gallery_pairs")} ORDER BY sort_order ASC, created_at DESC'
+    ).fetchall()
+    return render_template('admin_gallery.html',
+                           business=BUSINESS,
+                           pairs=pairs,
+                           result=None,
+                           error=None,
+                           page_title='Galerie verwalten | Admin',
+                           page_desc='',
+                           canonical='/admin/gallery/')
+
+
+@app.route('/admin/gallery/upload/', methods=['POST'])
+def admin_gallery_upload():
+    if not admin_is_authenticated():
+        return redirect(url_for('admin_login'))
+
+    error = None
+    result = None
+    db = get_db()
+
+    title = request.form.get('title', '').strip()
+    sort_order = int(request.form.get('sort_order', 0) or 0)
+
+    def save_image(field_name, url_field_name) -> str | None:
+        """Returns src string (relative path or URL) or None on error."""
+        file = request.files.get(field_name)
+        if file and file.filename:
+            if not allowed_file(file.filename):
+                return None
+            ext = file.filename.rsplit('.', 1)[1].lower()
+            filename = f'{uuid.uuid4().hex}.{ext}'
+            file.save(os.path.join(GALLERY_UPLOAD_FOLDER, filename))
+            return f'/static/img/gallery/{filename}'
+        url = request.form.get(url_field_name, '').strip()
+        return url if url else None
+
+    before_src = save_image('before_file', 'before_url')
+    after_src = save_image('after_file', 'after_url')
+
+    if not before_src or not after_src:
+        error = 'Bitte Bild "Vorher" und "Nachher" angeben (Datei oder URL).'
+    else:
+        db_execute(
+            db,
+            f'INSERT INTO {table_name("gallery_pairs")} (title, before_src, after_src, sort_order) VALUES (?, ?, ?, ?)',
+            (title or None, before_src, after_src, sort_order)
+        )
+        db.commit()
+        result = 'Bildpaar erfolgreich hinzugefügt.'
+
+    pairs = db_execute(
+        db,
+        f'SELECT * FROM {table_name("gallery_pairs")} ORDER BY sort_order ASC, created_at DESC'
+    ).fetchall()
+    return render_template('admin_gallery.html',
+                           business=BUSINESS,
+                           pairs=pairs,
+                           result=result,
+                           error=error,
+                           page_title='Galerie verwalten | Admin',
+                           page_desc='',
+                           canonical='/admin/gallery/')
+
+
+@app.route('/admin/gallery/delete/<int:pair_id>/', methods=['POST'])
+def admin_gallery_delete(pair_id):
+    if not admin_is_authenticated():
+        return redirect(url_for('admin_login'))
+    db = get_db()
+    row = db_execute(
+        db,
+        f'SELECT before_src, after_src FROM {table_name("gallery_pairs")} WHERE id=?',
+        (pair_id,)
+    ).fetchone()
+    if row:
+        # Remove local files if they were uploaded (not external URLs)
+        for src in (row['before_src'], row['after_src']):
+            if src and src.startswith('/static/img/gallery/'):
+                file_path = os.path.join(os.path.dirname(__file__), src.lstrip('/'))
+                try:
+                    os.remove(file_path)
+                except OSError:
+                    pass
+        db_execute(db, f'DELETE FROM {table_name("gallery_pairs")} WHERE id=?', (pair_id,))
+        db.commit()
+    return redirect(url_for('admin_gallery'))
 
 
 @app.route('/blog/')
