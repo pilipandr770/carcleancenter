@@ -1517,14 +1517,6 @@ select.form-control { cursor: pointer; }
   from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-@keyframes pulse-red {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(220,26,26,0.4); }
-  50% { box-shadow: 0 0 0 12px rgba(220,26,26,0); }
-}
 .anim-fade-up {
   opacity: 0;
   animation: fadeUp 0.6s ease forwards;
@@ -1534,7 +1526,6 @@ select.form-control { cursor: pointer; }
 .anim-delay-3 { animation-delay: 0.3s; }
 .anim-delay-4 { animation-delay: 0.4s; }
 .float-wa { animation: none; }
-.float-wa:hover { animation: none; }
 
 /* Empty blog state */
 .empty-state {

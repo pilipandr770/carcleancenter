@@ -41,7 +41,7 @@ CONTENT_UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'img',
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'webp', 'gif'}
 Path(GALLERY_UPLOAD_FOLDER).mkdir(parents=True, exist_ok=True)
 Path(CONTENT_UPLOAD_FOLDER).mkdir(parents=True, exist_ok=True)
-DEFAULT_HOME_ABOUT_IMAGE = 'https://car-clean-center.net/wp-content/uploads/2021/04/about-company-image.png'
+DEFAULT_HOME_ABOUT_IMAGE = '/static/img/stock/stock-detailing-1.jpg'
 DEFAULT_IMAGE_FALLBACK = '/static/img/stock/stock-detailing-1.jpg'
 DEFAULT_GALLERY_BEFORE_FALLBACK = '/static/img/stock/stock-detailing-3.jpg'
 DEFAULT_GALLERY_AFTER_FALLBACK = '/static/img/stock/stock-detailing-4.jpg'
