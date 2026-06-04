@@ -715,6 +715,22 @@ def index():
     db = get_db()
     posts_table = table_name('blog_posts')
     home_about_image = get_site_setting(db, 'home_about_image', DEFAULT_HOME_ABOUT_IMAGE)
+    featured_pairs = db_execute(
+        db,
+        f'''SELECT title, before_src, after_src
+            FROM {table_name("gallery_pairs")}
+            ORDER BY sort_order ASC, created_at DESC
+            LIMIT 6'''
+    ).fetchall()
+
+    hero_slides = []
+    for pair in featured_pairs:
+        after_src = pair['after_src'] if pair['after_src'] else ''
+        if after_src and after_src not in hero_slides:
+            hero_slides.append(after_src)
+    if home_about_image and home_about_image not in hero_slides:
+        hero_slides.append(home_about_image)
+
     recent_posts = db_execute(
         db,
         f'SELECT * FROM {posts_table} WHERE published=1 ORDER BY created_at DESC LIMIT 3'
@@ -722,6 +738,8 @@ def index():
     return render_template('index.html',
                            business=BUSINESS, services=SERVICES,
                            home_about_image=home_about_image,
+                           hero_slides=hero_slides,
+                           featured_pairs=featured_pairs[:3],
                            recent_posts=recent_posts,
                            page_title='Autopflege Rüsselsheim – Car Clean Center',
                            page_desc='Professionelle Autopflege & Fahrzeugaufbereitung in Rüsselsheim am Main. Handwäsche, Politur, Keramikversiegelung. Jetzt Termin vereinbaren!',

@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── SCROLL REVEAL ──
   const reveals = document.querySelectorAll(
-    '.service-card, .blog-card, .value-item, .price-section, .contact-card, .gallery-item'
+    '.service-card, .blog-card, .value-item, .price-section, .contact-card, .gallery-item, .package-card, .home-ba-card'
   );
 
   if ('IntersectionObserver' in window) {
@@ -243,5 +243,33 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
+
+  // ── HERO BACKGROUND SLIDER ──
+  const heroSlides = Array.from(document.querySelectorAll('[data-hero-slide]'));
+  const heroDots = Array.from(document.querySelectorAll('[data-hero-dot]'));
+  if (heroSlides.length > 1) {
+    let activeIndex = heroSlides.findIndex(s => s.classList.contains('active'));
+    if (activeIndex < 0) activeIndex = 0;
+
+    const setSlide = (index) => {
+      activeIndex = (index + heroSlides.length) % heroSlides.length;
+      heroSlides.forEach((slide, i) => {
+        slide.classList.toggle('active', i === activeIndex);
+      });
+      heroDots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === activeIndex);
+      });
+    };
+
+    let timer = setInterval(() => setSlide(activeIndex + 1), 5000);
+
+    heroDots.forEach((dot, i) => {
+      dot.addEventListener('click', () => {
+        setSlide(i);
+        clearInterval(timer);
+        timer = setInterval(() => setSlide(activeIndex + 1), 5000);
+      });
+    });
+  }
 
 });

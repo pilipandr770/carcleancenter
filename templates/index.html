@@ -21,24 +21,37 @@
 
 <!-- ══ HERO ══ -->
 <section class="hero" aria-label="Willkommen">
-  <div class="hero-bg"></div>
+  <div class="hero-bg" aria-hidden="true">
+    <div class="hero-bg-track" id="heroBgTrack">
+      {% for slide in hero_slides %}
+      <div class="hero-slide {% if loop.first %}active{% endif %}" data-hero-slide style="background-image:url('{{ slide }}');"></div>
+      {% endfor %}
+    </div>
+  </div>
   <div class="hero-grid-overlay"></div>
 
   <div class="hero-content">
     <div class="hero-text">
+      <div class="hero-promo anim-fade-up">
+        <span class="hero-promo-label">AKTION</span>
+        <span>Sommer-Special: Kostenlose Erstinspektion bei Lackaufbereitung</span>
+      </div>
       <div class="hero-badge anim-fade-up">
         <span>📍</span> Rüsselsheim am Main · Rhein-Main
       </div>
       <h1 class="hero-title anim-fade-up anim-delay-1">
-        Autopflege auf<br><em>höchstem Niveau</em>
+        We Make Your Car<br><em>Look Beautiful</em>
       </h1>
       <p class="hero-subtitle anim-fade-up anim-delay-2">
-        Professionelle Fahrzeugaufbereitung in Rüsselsheim. Handarbeit, modernste Technik
-        und echte Leidenschaft für jedes Fahrzeug.
+        Premium Fahrzeugaufbereitung, Politur, Versiegelung und Innenraum-Detailing.
+        Sichtbare Ergebnisse ab dem ersten Termin.
       </p>
       <div class="hero-actions anim-fade-up anim-delay-3">
         <a href="/kontakt/" class="btn btn-red">
-          Termin vereinbaren →
+          Jetzt Termin buchen →
+        </a>
+        <a href="tel:+491783640234" class="btn btn-outline">
+          📞 Jetzt anrufen
         </a>
         <a href="https://wa.me/491783640234" class="btn btn-wa" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -47,18 +60,25 @@
       </div>
       <div class="hero-stats anim-fade-up anim-delay-4">
         <div class="hero-stat">
-          <span class="hero-stat-number">100%</span>
-          <span class="hero-stat-label">Handarbeit</span>
+          <span class="hero-stat-number">1000+</span>
+          <span class="hero-stat-label">Fahrzeuge veredelt</span>
         </div>
         <div class="hero-stat">
-          <span class="hero-stat-number">6+</span>
-          <span class="hero-stat-label">Leistungen</span>
+          <span class="hero-stat-number">24+</span>
+          <span class="hero-stat-label">Jahre Erfahrung</span>
         </div>
         <div class="hero-stat">
-          <span class="hero-stat-number">20%</span>
-          <span class="hero-stat-label">Club-Rabatt</span>
+          <span class="hero-stat-number">4.9</span>
+          <span class="hero-stat-label">Google Rating</span>
         </div>
       </div>
+      {% if hero_slides|length > 1 %}
+      <div class="hero-dots" id="heroDots" aria-label="Hero slider navigation">
+        {% for slide in hero_slides %}
+        <button class="hero-dot {% if loop.first %}active{% endif %}" data-hero-dot="{{ loop.index0 }}" aria-label="Slide {{ loop.index }}"></button>
+        {% endfor %}
+      </div>
+      {% endif %}
     </div>
 
     <div class="hero-visual" aria-hidden="true">
@@ -121,6 +141,90 @@
     </div>
   </div>
 </section>
+
+<!-- ══ PACKAGES ══ -->
+<section class="section" style="background:var(--bg2);" aria-labelledby="packages-heading">
+  <div class="container">
+    <div class="text-center">
+      <span class="section-label">Unsere Pakete</span>
+      <h2 class="section-title" id="packages-heading">Detailing <span>Pakete</span></h2>
+      <p class="section-subtitle" style="margin:0 auto;max-width:700px;">Schnelle Orientierung wie bei Premium-Studios: wählen Sie ein Paket und wir passen es exakt auf Ihr Fahrzeug an.</p>
+    </div>
+
+    <div class="packages-grid">
+      <article class="package-card">
+        <span class="package-badge">Starter</span>
+        <h3 class="package-title">Fresh Finish</h3>
+        <p class="package-price">ab 129 €</p>
+        <ul class="package-features">
+          <li>Handwäsche inkl. Felgenreinigung</li>
+          <li>Innenraumreinigung</li>
+          <li>Komplettreinigung Innen & Außen</li>
+        </ul>
+        <a href="/kontakt/" class="btn btn-outline btn-sm">Angebot anfragen</a>
+      </article>
+
+      <article class="package-card package-card-featured">
+        <span class="package-badge">Most Popular</span>
+        <h3 class="package-title">Gloss Pro</h3>
+        <p class="package-price">ab 299 €</p>
+        <ul class="package-features">
+          <li>2-Stufen-Politur</li>
+          <li>Lack-Kneten + Defektminderung</li>
+          <li>Versiegelung + Innenraum-Finish</li>
+        </ul>
+        <a href="/kontakt/" class="btn btn-red btn-sm">Jetzt Termin sichern</a>
+      </article>
+
+      <article class="package-card">
+        <span class="package-badge">Premium</span>
+        <h3 class="package-title">Showroom Elite</h3>
+        <p class="package-price">ab 449 €</p>
+        <ul class="package-features">
+          <li>3-Stufen-Lackkorrektur</li>
+          <li>Tiefenglanz-Finish</li>
+          <li>Langzeit-Schutzkonzept</li>
+        </ul>
+        <a href="/kontakt/" class="btn btn-outline btn-sm">Kostenlose Beratung</a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ══ BEFORE AFTER SHOWCASE ══ -->
+{% if featured_pairs %}
+<section class="section" aria-labelledby="ba-showcase-heading">
+  <div class="container">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:40px;">
+      <div>
+        <span class="section-label">Echte Resultate</span>
+        <h2 class="section-title" id="ba-showcase-heading">Vorher / Nachher <span>Showcase</span></h2>
+      </div>
+      <a href="/galerie/" class="btn btn-outline btn-sm">Komplette Galerie →</a>
+    </div>
+
+    <div class="home-ba-grid">
+      {% for pair in featured_pairs %}
+      <article class="home-ba-card">
+        <div class="home-ba-media">
+          <img class="home-ba-before" src="{{ pair.before_src }}" alt="Vorher {{ pair.title or 'Autopflege' }}" loading="lazy">
+          <div class="home-ba-after-wrap">
+            <img class="home-ba-after" src="{{ pair.after_src }}" alt="Nachher {{ pair.title or 'Autopflege' }}" loading="lazy">
+          </div>
+          <div class="home-ba-divider"></div>
+          <span class="home-ba-label home-ba-label-before">VORHER</span>
+          <span class="home-ba-label home-ba-label-after">NACHHER</span>
+        </div>
+        <div class="home-ba-footer">
+          <h3>{{ pair.title or 'Fahrzeugaufbereitung' }}</h3>
+          <p>Professionelle Aufbereitung mit sichtbarem Unterschied.</p>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
 
 <!-- ══ ABOUT ══ -->
 <section class="section" style="background:var(--bg2);" aria-labelledby="about-heading">
