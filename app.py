@@ -185,32 +185,32 @@ BUSINESS = {
 
 SERVICES = [
     {
-        'icon': '🚿',
+        'icon': '01',
         'title': 'Handwäsche',
         'desc': 'pH-neutrale Handwäsche inkl. Felgenreinigung – schonend und gründlich.'
     },
     {
-        'icon': '🪑',
+        'icon': '02',
         'title': 'Innenraumreinigung',
         'desc': 'Saugen, Cockpit, Scheiben – Ihr Innenraum erstrahlt in neuem Glanz.'
     },
     {
-        'icon': '✨',
+        'icon': '03',
         'title': 'Politur & Lackkorrektur',
         'desc': '1- bis 3-Stufen-Politur für perfekten Hochglanz und Kratzerbeseitigung.'
     },
     {
-        'icon': '🛡️',
+        'icon': '04',
         'title': 'Keramikversiegelung',
         'desc': 'Langzeitschutz durch Nano- & Keramikversiegelung – bis zu 5 Jahre.'
     },
     {
-        'icon': '💺',
+        'icon': '05',
         'title': 'Leder- & Polsterpflege',
         'desc': 'Professionelle Reinigung und Pflege von Leder, Polster und Teppichen.'
     },
     {
-        'icon': '🌬️',
+        'icon': '06',
         'title': 'Ozonbehandlung',
         'desc': 'Nachhaltige Geruchsbeseitigung durch professionelle Ozonbehandlung.'
     },
