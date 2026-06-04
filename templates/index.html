@@ -191,6 +191,43 @@
   </div>
 </section>
 
+<!-- ══ REVIEWS ══ -->
+<section class="section" aria-labelledby="reviews-heading">
+  <div class="container">
+    <div class="text-center">
+      <span class="section-label">Vertrauen</span>
+      <h2 class="section-title" id="reviews-heading">Kundenstimmen & <span>Bewertungen</span></h2>
+      <p class="section-subtitle" style="margin:0 auto;max-width:680px;">So beschreiben Kunden unsere Arbeit in Rüsselsheim und im gesamten Rhein-Main-Gebiet.</p>
+    </div>
+
+    <div class="reviews-kpi-row">
+      <div class="reviews-kpi-card">
+        <span class="reviews-kpi-score">4.9/5</span>
+        <span class="reviews-kpi-label">Google-Bewertung</span>
+      </div>
+      <a href="https://maps.app.goo.gl/izo2LgG3KRjFr1pa6?g_st=iw" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Alle Rezensionen ansehen →</a>
+    </div>
+
+    <div class="reviews-grid">
+      <article class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Top Ergebnis! Innenraum war komplett verwandelt. Sehr professionell, pünktlich und transparent bei den Kosten."</p>
+        <p class="review-author">Google Kunde · Rüsselsheim</p>
+      </article>
+      <article class="review-card review-card-featured">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Die Lackaufbereitung und Politur sind auf einem Niveau, das ich sonst nur von Premium-Studios kenne. Klare Empfehlung."</p>
+        <p class="review-author">Google Kunde · Frankfurt</p>
+      </article>
+      <article class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Vom Erstkontakt bis zur Übergabe alles super. Auto sieht aus wie neu, und die Beratung war ehrlich und verständlich."</p>
+        <p class="review-author">Google Kunde · Mainz</p>
+      </article>
+    </div>
+  </div>
+</section>
+
 <!-- ══ BEFORE AFTER SHOWCASE ══ -->
 {% if featured_pairs %}
 <section class="section" aria-labelledby="ba-showcase-heading">
@@ -351,5 +388,12 @@
     </div>
   </div>
 </section>
+
+<!-- ══ MOBILE STICKY CTA ══ -->
+<div class="mobile-sticky-cta" aria-label="Schnellaktionen">
+  <a href="tel:{{ business.phone }}" class="mobile-sticky-btn mobile-sticky-call">Anrufen</a>
+  <a href="{{ business.whatsapp }}" class="mobile-sticky-btn mobile-sticky-wa" target="_blank" rel="noopener">WhatsApp</a>
+  <a href="/kontakt/" class="mobile-sticky-btn mobile-sticky-book">Termin</a>
+</div>
 
 {% endblock %}

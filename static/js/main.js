@@ -272,4 +272,45 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ── HERO PARALLAX + BEFORE/AFTER MOTION ──
+  const heroBgTrack = document.getElementById('heroBgTrack');
+  const homeBaCards = document.querySelectorAll('.home-ba-card');
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (!prefersReducedMotion && (heroBgTrack || homeBaCards.length)) {
+    let ticking = false;
+    const onMotionScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY || 0;
+
+        if (heroBgTrack) {
+          const shift = Math.min(90, y * 0.12);
+          heroBgTrack.style.transform = `translateY(${shift}px)`;
+        }
+
+        homeBaCards.forEach((card) => {
+          const media = card.querySelector('.home-ba-media');
+          const divider = card.querySelector('.home-ba-divider');
+          const afterWrap = card.querySelector('.home-ba-after-wrap');
+          if (!media || !divider || !afterWrap) return;
+
+          const rect = card.getBoundingClientRect();
+          const viewportMid = window.innerHeight / 2;
+          const progress = (viewportMid - rect.top) / (window.innerHeight + rect.height);
+          const percent = Math.max(30, Math.min(70, 50 + (progress - 0.5) * 35));
+
+          divider.style.left = `${percent}%`;
+          afterWrap.style.clipPath = `inset(0 0 0 ${percent}%)`;
+        });
+
+        ticking = false;
+      });
+    };
+
+    window.addEventListener('scroll', onMotionScroll, { passive: true });
+    onMotionScroll();
+  }
+
 });
