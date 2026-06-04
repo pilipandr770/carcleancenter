@@ -731,6 +731,12 @@ def index():
     if home_about_image and home_about_image not in hero_slides:
         hero_slides.append(home_about_image)
 
+    wall_images = []
+    for pair in featured_pairs:
+        for src in (pair['after_src'], pair['before_src']):
+            if src and src not in wall_images:
+                wall_images.append(src)
+
     recent_posts = db_execute(
         db,
         f'SELECT * FROM {posts_table} WHERE published=1 ORDER BY created_at DESC LIMIT 3'
@@ -740,6 +746,7 @@ def index():
                            home_about_image=home_about_image,
                            hero_slides=hero_slides,
                            featured_pairs=featured_pairs[:3],
+                           wall_images=wall_images[:18],
                            recent_posts=recent_posts,
                            page_title='Autopflege Rüsselsheim – Car Clean Center',
                            page_desc='Professionelle Autopflege & Fahrzeugaufbereitung in Rüsselsheim am Main. Handwäsche, Politur, Keramikversiegelung. Jetzt Termin vereinbaren!',

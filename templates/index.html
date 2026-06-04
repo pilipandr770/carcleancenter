@@ -116,6 +116,23 @@
   </div>
 </section>
 
+<!-- ══ PROMO TICKER ══ -->
+<section class="promo-strip" aria-label="Aktionshinweis">
+  <div class="container promo-strip-inner">
+    <div class="promo-marquee">
+      <span>⚡ Diese Woche: Gratis Lack-Check bei jeder Aufbereitung</span>
+      <span>•</span>
+      <span>🚗 Premium-Detailing in Rüsselsheim & Rhein-Main</span>
+      <span>•</span>
+      <span>📞 Soforttermin per WhatsApp möglich</span>
+    </div>
+    <div class="promo-timer" id="promoTimer" aria-live="polite">
+      <span class="promo-timer-label">Angebot endet in</span>
+      <strong class="promo-timer-value" id="promoTimerValue">--:--:--</strong>
+    </div>
+  </div>
+</section>
+
 <!-- ══ SERVICES ══ -->
 <section class="section" id="leistungen" aria-labelledby="services-heading">
   <div class="container">
@@ -263,6 +280,29 @@
 </section>
 {% endif %}
 
+<!-- ══ RESULTS WALL ══ -->
+{% if wall_images %}
+<section class="section" style="background:var(--bg2);" aria-labelledby="results-wall-heading">
+  <div class="container">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:28px;">
+      <div>
+        <span class="section-label">Visual Proof</span>
+        <h2 class="section-title" id="results-wall-heading">Results <span>Wall</span></h2>
+      </div>
+      <a href="/galerie/" class="btn btn-outline btn-sm">Mehr Ergebnisse →</a>
+    </div>
+
+    <div class="results-wall-grid">
+      {% for src in wall_images %}
+      <figure class="results-wall-item">
+        <img src="{{ src }}" alt="Autopflege Ergebnis {{ loop.index }}" loading="lazy">
+      </figure>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
 <!-- ══ ABOUT ══ -->
 <section class="section" style="background:var(--bg2);" aria-labelledby="about-heading">
   <div class="container">
@@ -369,6 +409,24 @@
   </div>
 </section>
 {% endif %}
+
+<!-- ══ LOCAL SEO AREAS ══ -->
+<section class="section-sm" style="background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);" aria-labelledby="areas-heading">
+  <div class="container">
+    <div class="areas-wrap">
+      <div>
+        <span class="section-label">Regional sichtbar</span>
+        <h2 class="section-title" id="areas-heading" style="margin-bottom:10px;">Servicegebiete im <span>Rhein-Main</span></h2>
+        <p class="text-muted" style="max-width:760px;">Wir betreuen Kunden aus Rüsselsheim, Frankfurt, Mainz, Wiesbaden und Umgebung. Für Geschäftskunden sind auch individuelle Flottenlösungen möglich.</p>
+      </div>
+      <div class="areas-chip-grid">
+        {% for area in ['Rüsselsheim', 'Frankfurt', 'Mainz', 'Wiesbaden', 'Darmstadt', 'Groß-Gerau', 'Kelsterbach', 'Mörfelden-Walldorf', 'Hattersheim', 'Hochheim'] %}
+        <span class="area-chip">{{ area }}</span>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- ══ CONTACT STRIP ══ -->
 <section class="section-sm" style="background:var(--bg2);border-top:1px solid var(--border);">

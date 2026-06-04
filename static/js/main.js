@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── SCROLL REVEAL ──
   const reveals = document.querySelectorAll(
-    '.service-card, .blog-card, .value-item, .price-section, .contact-card, .gallery-item, .package-card, .home-ba-card'
+    '.service-card, .blog-card, .value-item, .price-section, .contact-card, .gallery-item, .package-card, .home-ba-card, .review-card, .results-wall-item, .area-chip'
   );
 
   if ('IntersectionObserver' in window) {
@@ -311,6 +311,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('scroll', onMotionScroll, { passive: true });
     onMotionScroll();
+  }
+
+  // ── PROMO COUNTDOWN (resets weekly) ──
+  const promoTimerValue = document.getElementById('promoTimerValue');
+  if (promoTimerValue) {
+    const getNextMonday = () => {
+      const now = new Date();
+      const day = now.getDay(); // 0..6
+      const daysToAdd = day === 1 ? 7 : ((8 - day) % 7);
+      const target = new Date(now);
+      target.setDate(now.getDate() + daysToAdd);
+      target.setHours(0, 0, 0, 0);
+      return target;
+    };
+
+    let deadline = getNextMonday();
+
+    const formatDiff = (ms) => {
+      const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+      const d = Math.floor(totalSeconds / 86400);
+      const h = Math.floor((totalSeconds % 86400) / 3600);
+      const m = Math.floor((totalSeconds % 3600) / 60);
+      const s = totalSeconds % 60;
+      return `${d}d ${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
+    };
+
+    const tick = () => {
+      const now = new Date();
+      if (deadline <= now) {
+        deadline = getNextMonday();
+      }
+      promoTimerValue.textContent = formatDiff(deadline - now);
+    };
+
+    tick();
+    setInterval(tick, 1000);
   }
 
 });
