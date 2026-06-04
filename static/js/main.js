@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── SCROLL REVEAL ──
   const reveals = document.querySelectorAll(
-    '.service-card, .blog-card, .value-item, .price-section, .contact-card, .gallery-item, .package-card, .home-ba-card, .review-card, .results-wall-item, .area-chip'
+    '.service-card, .blog-card, .value-item, .price-section, .contact-card, .gallery-item, .package-card, .home-ba-card, .review-card, .results-wall-item, .area-chip, .why-kpi-card'
   );
 
   if ('IntersectionObserver' in window) {
