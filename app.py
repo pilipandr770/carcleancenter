@@ -42,6 +42,9 @@ ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'webp', 'gif'}
 Path(GALLERY_UPLOAD_FOLDER).mkdir(parents=True, exist_ok=True)
 Path(CONTENT_UPLOAD_FOLDER).mkdir(parents=True, exist_ok=True)
 DEFAULT_HOME_ABOUT_IMAGE = 'https://car-clean-center.net/wp-content/uploads/2021/04/about-company-image.png'
+DEFAULT_IMAGE_FALLBACK = '/static/img/stock/stock-detailing-1.jpg'
+DEFAULT_GALLERY_BEFORE_FALLBACK = '/static/img/stock/stock-detailing-3.jpg'
+DEFAULT_GALLERY_AFTER_FALLBACK = '/static/img/stock/stock-detailing-4.jpg'
 
 
 def allowed_file(filename: str) -> bool:
@@ -96,6 +99,34 @@ def save_uploaded_content_file(file_storage):
     filename = f'{uuid.uuid4().hex}.{ext}'
     file_storage.save(os.path.join(CONTENT_UPLOAD_FOLDER, filename))
     return f'/static/img/content/{filename}'
+
+
+def local_static_path_exists(src: str | None) -> bool:
+    if not src or not src.startswith('/static/'):
+        return False
+    file_path = os.path.join(os.path.dirname(__file__), src.lstrip('/'))
+    return os.path.exists(file_path)
+
+
+def safe_image_src(src: str | None, fallback: str = DEFAULT_IMAGE_FALLBACK) -> str:
+    candidate = (src or '').strip()
+    if not candidate:
+        return fallback
+    if candidate.startswith('/static/') and not local_static_path_exists(candidate):
+        return fallback
+    return candidate
+
+
+def sanitize_gallery_pair(pair) -> dict:
+    title = pair['title'] if pair['title'] else None
+    return {
+        'id': pair['id'],
+        'title': title,
+        'before_src': safe_image_src(pair['before_src'], DEFAULT_GALLERY_BEFORE_FALLBACK),
+        'after_src': safe_image_src(pair['after_src'], DEFAULT_GALLERY_AFTER_FALLBACK),
+        'sort_order': pair['sort_order'],
+        'created_at': pair['created_at'],
+    }
 
 
 def get_effective_base_url() -> str:
@@ -714,14 +745,25 @@ def generate_blog_post(topic: str, source: dict | None = None, recent_titles: li
 def index():
     db = get_db()
     posts_table = table_name('blog_posts')
-    home_about_image = get_site_setting(db, 'home_about_image', DEFAULT_HOME_ABOUT_IMAGE)
-    featured_pairs = db_execute(
+    home_about_image = safe_image_src(
+        get_site_setting(db, 'home_about_image', DEFAULT_HOME_ABOUT_IMAGE),
+        DEFAULT_IMAGE_FALLBACK
+    )
+    raw_featured_pairs = db_execute(
         db,
         f'''SELECT title, before_src, after_src
             FROM {table_name("gallery_pairs")}
             ORDER BY sort_order ASC, created_at DESC
             LIMIT 6'''
     ).fetchall()
+    featured_pairs = [
+        {
+            'title': pair['title'],
+            'before_src': safe_image_src(pair['before_src'], DEFAULT_GALLERY_BEFORE_FALLBACK),
+            'after_src': safe_image_src(pair['after_src'], DEFAULT_GALLERY_AFTER_FALLBACK),
+        }
+        for pair in raw_featured_pairs
+    ]
 
     hero_slides = []
     for pair in featured_pairs:
@@ -774,10 +816,11 @@ def preisliste():
 @app.route('/galerie/')
 def galerie():
     db = get_db()
-    pairs = db_execute(
+    raw_pairs = db_execute(
         db,
         f'SELECT * FROM {table_name("gallery_pairs")} ORDER BY sort_order ASC, created_at DESC'
     ).fetchall()
+    pairs = [sanitize_gallery_pair(pair) for pair in raw_pairs]
     return render_template('galerie.html',
                            business=BUSINESS,
                            pairs=pairs,
@@ -1560,12 +1603,17 @@ def manifest():
         "theme_color": "#DC1A1A",
         "lang": "de",
         "icons": [
-            {"src": "https://car-clean-center.net/wp-content/uploads/2025/05/cropped-favicon-1-270x270.png",
-             "sizes": "270x270", "type": "image/png"}
+            {"src": "/static/img/logo-main.png", "sizes": "192x192", "type": "image/png"},
+            {"src": "/static/img/logo-main.png", "sizes": "512x512", "type": "image/png"}
         ]
     }
     return make_response(json.dumps(data, ensure_ascii=False, indent=2), 200,
                          {'Content-Type': 'application/manifest+json; charset=utf-8'})
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return redirect('/static/img/logo-main.png', code=302)
 
 
 if __name__ == '__main__':
