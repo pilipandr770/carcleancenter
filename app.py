@@ -651,7 +651,7 @@ JSON-Format (exakt so):
         {{ "question": "Frage 1", "answer": "Antwort 1" }},
         {{ "question": "Frage 2", "answer": "Antwort 2" }}
     ],
-    "content": "Vollständiger HTML-Artikel-Content. Verwende <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>. Mindestens 700 Wörter. Integriere Keywords natürlich: 'Autopflege Rüsselsheim', 'Car Clean Center', 'Fahrzeugaufbereitung'. Strukturiere mit mehreren H2-Abschnitten. Ende mit CTA zum Car Clean Center Rüsselsheim mit Link: <a href='https://car-clean-center.net/kontakt/'>Jetzt Termin vereinbaren</a>.",
+        "content": "Vollständiger HTML-Artikel-Content. Verwende <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>. Mindestens 700 Wörter. Integriere Keywords natürlich: 'Autopflege Rüsselsheim', 'Car Clean Center', 'Fahrzeugaufbereitung'. Strukturiere mit mehreren H2-Abschnitten. WICHTIG: Nutze in HTML-Attributen nur einfache Anfuehrungszeichen (') statt doppelter (") und gib keine ungeescapten Zeilenumbrueche in Strings aus. Ende mit CTA zum Car Clean Center Rüsselsheim mit Link: <a href='https://car-clean-center.net/kontakt/'>Jetzt Termin vereinbaren</a>.",
   "reading_time": 7
 }}"""
 
@@ -680,7 +680,7 @@ JSON-Format (exakt so):
         {{ "question": "Frage 1", "answer": "Antwort 1" }},
         {{ "question": "Frage 2", "answer": "Antwort 2" }}
     ],
-    "content": "Vollständiger HTML-Artikel-Content. Verwende <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>. Mindestens 650 Wörter. Integriere Keywords natürlich: 'Autopflege Rüsselsheim', 'Car Clean Center', 'Fahrzeugaufbereitung'. Strukturiere mit mehreren H2-Abschnitten. Ende mit CTA zum Car Clean Center Rüsselsheim mit Link: <a href='https://car-clean-center.net/kontakt/'>Jetzt Termin vereinbaren</a>.",
+        "content": "Vollständiger HTML-Artikel-Content. Verwende <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>. Mindestens 650 Wörter. Integriere Keywords natürlich: 'Autopflege Rüsselsheim', 'Car Clean Center', 'Fahrzeugaufbereitung'. Strukturiere mit mehreren H2-Abschnitten. WICHTIG: Nutze in HTML-Attributen nur einfache Anfuehrungszeichen (') statt doppelter (") und gib keine ungeescapten Zeilenumbrueche in Strings aus. Ende mit CTA zum Car Clean Center Rüsselsheim mit Link: <a href='https://car-clean-center.net/kontakt/'>Jetzt Termin vereinbaren</a>.",
   "reading_time": 6
 }}"""
 
@@ -700,7 +700,32 @@ def parse_ai_json_payload(raw: str) -> dict:
         raise ValueError('Kein JSON-Objekt im KI-Output gefunden.')
 
     payload = cleaned[start:end + 1]
-    return json.loads(payload)
+    try:
+        return json.loads(payload, strict=False)
+    except json.JSONDecodeError:
+        # Common Anthropic failure mode: unescaped double quotes/newlines inside the HTML content field.
+        repaired = repair_content_field_json(payload)
+        return json.loads(repaired, strict=False)
+
+
+def repair_content_field_json(payload: str) -> str:
+    marker = re.search(r'"content"\s*:\s*"', payload)
+    if not marker:
+        raise ValueError('JSON-Reparatur nicht moeglich: content-Feld fehlt.')
+
+    content_start = marker.end()
+    suffix_match = re.search(r'",\s*"reading_time"\s*:', payload[content_start:], flags=re.DOTALL)
+    if not suffix_match:
+        raise ValueError('JSON-Reparatur nicht moeglich: reading_time-Feld fehlt.')
+
+    content_end = content_start + suffix_match.start()
+    content_raw = payload[content_start:content_end]
+
+    # Keep escaped quotes as-is, escape only raw quotes that would break JSON.
+    content_escaped_quotes = re.sub(r'(?<!\\)"', r'\\"', content_raw)
+    content_escaped_newlines = content_escaped_quotes.replace('\r\n', '\\n').replace('\n', '\\n')
+
+    return payload[:content_start] + content_escaped_newlines + payload[content_end:]
 
 
 def generate_blog_post(topic: str, source: dict | None = None, recent_titles: list[str] | None = None) -> dict:
