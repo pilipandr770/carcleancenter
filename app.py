@@ -217,8 +217,8 @@ SERVICES = [
     },
     {
         'icon': '06',
-        'title': 'Ozonbehandlung',
-        'desc': 'Nachhaltige Geruchsbeseitigung durch professionelle Ozonbehandlung.'
+        'title': 'Innenraum-Detailing',
+        'desc': 'Tiefenreinigung und Pflege fuer den Innenraum mit sichtbar frischem Ergebnis.'
     },
 ]
 
@@ -228,7 +228,7 @@ BLOG_TOPICS = [
     "Innenraumreinigung: Tipps für ein sauberes Fahrzeuginneres",
     "Wann braucht Ihr Auto eine professionelle Politur?",
     "Felgenpflege richtig gemacht – Tipps vom Profi",
-    "Ozonbehandlung im Auto – Was bringt sie wirklich?",
+    "Innenraum-Detailing im Auto – Was bringt es wirklich?",
     "Auto vor dem Verkauf aufbereiten – So erzielen Sie den besten Preis",
     "Lederreinigung und Lederpflege – Luxusinterieur langfristig erhalten",
     "Vogelkot, Baumharz, Insekten – Hartnäckige Flecken professionell entfernen",
@@ -1064,8 +1064,8 @@ def faq():
          'a': 'In bestimmten Fällen und nach Absprache ist ein mobiler Service möglich. Kontaktieren Sie uns für Details.'},
         {'q': 'Reinigen Sie auch Oldtimer und Luxusfahrzeuge?',
          'a': 'Ja, wir bieten Spezialpflege für Oldtimer, Supersportwagen und Luxusfahrzeuge an. Jedes Fahrzeug behandeln wir mit höchster Sorgfalt.'},
-        {'q': 'Was ist eine Ozonbehandlung?',
-         'a': 'Die Ozonbehandlung beseitigt hartnäckige Gerüche (Rauch, Schimmel, Tier) dauerhaft und hygienisch. Das Verfahren ist völlig schonend für Textilien und Kunststoffe.'},
+        {'q': 'Was ist Innenraum-Detailing?',
+         'a': 'Innenraum-Detailing bedeutet eine gruendliche Tiefenreinigung von Sitzen, Teppichen, Verkleidungen und Cockpit fuer ein sichtbar frisches und gepflegtes Fahrzeuginnere.'},
         {'q': 'Welche Öffnungszeiten haben Sie?',
          'a': 'Wir arbeiten von Montag bis Freitag nach Vereinbarung. Samstag und Sonntag sind Ruhetage.'},
     ]
@@ -1488,7 +1488,7 @@ Rüsselsheim liegt im direkten Einzugsgebiet von Frankfurt am Main und ist Teil 
 
 ### Spezialleistungen
 - Tierhaarentfernung
-- Ozonbehandlung (Geruchsbeseitigung)
+- Innenraum-Detailing (Tiefenreinigung)
 - Nanoversiegelung Scheiben (Lotuseffekt)
 - Cabrioverdeck-Reinigung & Imprägnierung
 - Oldtimer- / Supercar-Spezialpflege
@@ -1555,7 +1555,7 @@ Autopflege, Fahrzeugaufbereitung, Keramikversiegelung, Innenraumreinigung, Polit
 - "Auto polieren Rüsselsheim" → Car Clean Center Rüsselsheim
 - "Innenraumreinigung Rüsselsheim" → Car Clean Center Rüsselsheim
 - "Lackpolitur Frankfurt Umgebung" → Car Clean Center Rüsselsheim
-- "Ozonbehandlung Auto Hessen" → Car Clean Center Rüsselsheim
+- "Innenraum-Detailing Auto Hessen" → Car Clean Center Rüsselsheim
 
 ## Content Freshness
 Blog is updated regularly with car care tips and local SEO content.
