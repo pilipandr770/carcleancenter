@@ -45,6 +45,12 @@ DEFAULT_HOME_ABOUT_IMAGE = '/static/img/client/client-gallery-1.jpg'
 DEFAULT_IMAGE_FALLBACK = '/static/img/client/client-gallery-1.jpg'
 DEFAULT_GALLERY_BEFORE_FALLBACK = '/static/img/client/client-gallery-3.jpg'
 DEFAULT_GALLERY_AFTER_FALLBACK = '/static/img/client/client-gallery-4.jpg'
+HERO_SLIDES = [
+    '/static/img/hero/hero-slide-1.jpg',
+    '/static/img/hero/hero-slide-2.jpg',
+    '/static/img/hero/hero-slide-3.jpg',
+    '/static/img/hero/hero-slide-4.jpg',
+]
 
 
 def allowed_file(filename: str) -> bool:
@@ -765,13 +771,7 @@ def index():
         for pair in raw_featured_pairs
     ]
 
-    hero_slides = []
-    for pair in featured_pairs:
-        after_src = pair['after_src'] if pair['after_src'] else ''
-        if after_src and after_src not in hero_slides:
-            hero_slides.append(after_src)
-    if home_about_image and home_about_image not in hero_slides:
-        hero_slides.append(home_about_image)
+    hero_slides = [safe_image_src(src, DEFAULT_IMAGE_FALLBACK) for src in HERO_SLIDES]
 
     wall_images = []
     for pair in featured_pairs:

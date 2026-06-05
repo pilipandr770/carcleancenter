@@ -261,9 +261,17 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     };
 
+    let heroTimer = setInterval(() => {
+      setSlide(activeIndex + 1);
+    }, 5000);
+
     heroDots.forEach((dot, i) => {
       dot.addEventListener('click', () => {
         setSlide(i);
+        clearInterval(heroTimer);
+        heroTimer = setInterval(() => {
+          setSlide(activeIndex + 1);
+        }, 5000);
       });
     });
   }
