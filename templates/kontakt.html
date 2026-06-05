@@ -6,7 +6,7 @@
     <span class="section-label">Schreiben Sie uns</span>
     <h1 class="section-title">Termin <span>vereinbaren</span></h1>
     <p class="text-muted" style="max-width:520px;">
-      Rufen Sie uns an, schreiben Sie uns per WhatsApp oder nutzen Sie das Kontaktformular –
+      Rufen Sie uns an, schreiben Sie uns per E-Mail oder nutzen Sie das Kontaktformular –
       wir melden uns schnellstmöglich.
     </p>
   </div>
@@ -59,13 +59,6 @@
           <div class="contact-item">
             <span class="contact-item-icon">03</span>
             <div>
-              <p style="margin:0;font-size:0.82rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;">WhatsApp</p>
-              <a href="{{ business.whatsapp }}" target="_blank" rel="noopener" style="font-size:1rem;color:#25D366;font-weight:700;">Jetzt schreiben →</a>
-            </div>
-          </div>
-          <div class="contact-item">
-            <span class="contact-item-icon">04</span>
-            <div>
               <p style="margin:0;font-size:0.82rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;">E-Mail</p>
               <a href="mailto:{{ business.email }}" style="color:var(--text);">{{ business.email }}</a>
             </div>
@@ -76,23 +69,18 @@
           <p class="contact-card-title">Öffnungszeiten</p>
           <div style="display:flex;flex-direction:column;gap:10px;">
             <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:0.92rem;">
-              <span style="color:var(--text);">Montag – Samstag</span>
+              <span style="color:var(--text);">Montag – Freitag</span>
               <span style="color:var(--gold);font-weight:600;">nach Vereinbarung</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:0.92rem;">
+              <span style="color:var(--text);">Samstag</span>
+              <span style="color:var(--text-muted);">geschlossen</span>
             </div>
             <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:0.92rem;">
               <span style="color:var(--text);">Sonntag</span>
               <span style="color:var(--text-muted);">geschlossen</span>
             </div>
           </div>
-        </div>
-
-        <!-- Club card -->
-        <div class="cta-banner">
-          <h3 style="font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px;">Autowasch-Club</h3>
-          <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:16px;">
-            20% Rabatt auf alle Dienste + unbegrenztes Waschprogramm!
-          </p>
-          <a href="tel:{{ business.phone }}" class="btn btn-red btn-sm">Jetzt anrufen</a>
         </div>
       </div>
 
@@ -135,7 +123,6 @@
               <option>Lederreinigung</option>
               <option>Ozonbehandlung</option>
               <option>Vogelkot-Spezialbehandlung</option>
-              <option>Autowasch-Club Mitgliedschaft</option>
               <option>Sonstiges / Beratung</option>
             </select>
           </div>
@@ -152,7 +139,7 @@
             Anfrage absenden →
           </button>
           <p style="font-size:0.78rem;color:var(--text-dim);text-align:center;margin-top:12px;">
-            Alternativ direkt: <a href="https://wa.me/491783640234" style="color:#25D366;" target="_blank">WhatsApp schreiben</a>
+            Alternativ direkt: <a href="mailto:{{ business.email }}" style="color:var(--red);">{{ business.email }}</a>
             oder <a href="tel:+491783640234" style="color:var(--red);">anrufen</a>
           </p>
         </form>
@@ -177,12 +164,13 @@ document.getElementById('contactForm').addEventListener('submit', function(e) {
   const service = document.getElementById('service').value;
   const car = document.getElementById('car').value;
   const msg = document.getElementById('message').value;
-  const waText = encodeURIComponent(
-    `Hallo Car Clean Center!\n\nName: ${name}\nTelefon: ${phone}\nFahrzeug: ${car || '-'}\nLeistung: ${service || '-'}\nNachricht: ${msg || '-'}`
+  const subject = encodeURIComponent('Terminanfrage - Car Clean Center');
+  const body = encodeURIComponent(
+    `Hallo Car Clean Center,\n\nich moechte einen Termin anfragen.\n\nName: ${name}\nTelefon: ${phone}\nE-Mail: ${document.getElementById('email').value.trim() || '-'}\nFahrzeug: ${car || '-'}\nLeistung: ${service || '-'}\nNachricht: ${msg || '-'}\n`
   );
-  window.open(`https://wa.me/491783640234?text=${waText}`, '_blank');
+  window.location.href = `mailto:{{ business.email }}?subject=${subject}&body=${body}`;
   alert.className = 'alert alert-success';
-  alert.textContent = '✓ Ihre Anfrage wird per WhatsApp gesendet. Wir melden uns schnellstmöglich!';
+  alert.textContent = 'Ihre Anfrage wird als E-Mail vorbereitet. Bitte senden Sie die Nachricht in Ihrem E-Mail-Programm ab.';
   alert.style.display = 'block';
   this.reset();
 });
