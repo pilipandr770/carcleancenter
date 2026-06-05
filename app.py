@@ -242,19 +242,9 @@ BLOG_TOPICS = [
 
 RSS_FEEDS = [
     {
-        'name': 'Motor1 Deutschland',
-        'url': 'https://de.motor1.com/rss/articles/all/',
-        'priority': 3,
-    },
-    {
-        'name': 'auto motor und sport',
-        'url': 'https://www.auto-motor-und-sport.de/rss/alle',
-        'priority': 2,
-    },
-    {
         'name': 'Coat\'n Cast München',
         'url': 'https://www.coatncast.de/feed',
-        'priority': 4,
+        'priority': 5,
     },
 ]
 
@@ -546,6 +536,23 @@ GERMAN_STOPWORDS = {
     'auto', 'car', 'clean', 'center', 'ruesselsheim', 'russelsheim', 'ruesselsheim', 'main',
 }
 
+CARE_RELEVANT_KEYWORDS = {
+    'autopflege', 'fahrzeugaufbereitung', 'aufbereitung', 'detailing', 'detailing',
+    'lackpflege', 'lackschutz', 'politur', 'versiegelung', 'keramikversiegelung',
+    'keramik', 'nano', 'innenraum', 'innenraumreinigung', 'lederpflege', 'handwaesche',
+    'handwäsche', 'reinigung', 'geruch', 'ozon', 'felgenpflege', 'cabrioverdeck', 'pflege'
+}
+
+
+def is_relevant_inspiration_entry(entry: dict) -> bool:
+    haystack = ' '.join([
+        entry.get('title') or '',
+        entry.get('summary') or '',
+        ' '.join(entry.get('categories') or []),
+    ]).lower()
+    haystack = haystack.replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue').replace('ß', 'ss')
+    return any(keyword in haystack for keyword in CARE_RELEVANT_KEYWORDS)
+
 
 def _topic_tokens(text: str) -> set[str]:
     words = re.sub(r'[^a-z0-9äöüß ]+', ' ', (text or '').lower()).split()
@@ -584,6 +591,8 @@ def select_daily_inspiration(db, existing_titles: list[str]) -> dict | None:
             for entry in fetch_rss_entries(feed['url'])[:10]:
                 if entry['link'] in used_urls:
                     continue
+                if not is_relevant_inspiration_entry(entry):
+                    continue
                 candidates.append({
                     'source_feed': feed['name'],
                     'source_feed_url': feed['url'],
@@ -615,7 +624,8 @@ WICHTIG ZUR DEDUPLIKATION:
 """
 
     if source:
-        source_categories = ', '.join(source.get('categories') or [])
+        source_categories = ', '.join((source.get('categories') or [])[:8])
+        source_summary = (source.get('summary') or 'keine Zusammenfassung')[:700]
         return f"""Du bist ein SEO-Experte und Content-Writer für ein Autopflege-Unternehmen.
 Schreibe einen originellen, vollständig neuen SEO-Artikel auf Deutsch für "Car Clean Center Rüsselsheim".
 
@@ -632,7 +642,7 @@ WICHTIG:
 Quelle:
 - Feed: {source['source_feed']}
 - Titel: {source['title']}
-- Zusammenfassung: {source['summary'] or 'keine Zusammenfassung'}
+- Zusammenfassung: {source_summary}
 - Kategorien: {source_categories or 'keine'}
 - URL: {source['link']}
 
@@ -728,45 +738,74 @@ def repair_content_field_json(payload: str) -> str:
     return payload[:content_start] + content_escaped_newlines + payload[content_end:]
 
 
+def validate_generated_post_payload(data: dict) -> tuple[bool, str]:
+    required = ['title', 'meta_description', 'keywords', 'tags', 'excerpt', 'faq_json', 'content', 'reading_time']
+    missing = [key for key in required if key not in data]
+    if missing:
+        return False, f'Fehlende Felder: {", ".join(missing)}'
+
+    if not str(data.get('title', '')).strip():
+        return False, 'Titel ist leer.'
+    if not str(data.get('content', '')).strip():
+        return False, 'Content ist leer.'
+
+    faq = data.get('faq_json')
+    if not isinstance(faq, list):
+        return False, 'faq_json ist kein Array.'
+
+    return True, ''
+
+
 def generate_blog_post(topic: str, source: dict | None = None, recent_titles: list[str] | None = None) -> dict:
     import anthropic
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, timeout=ANTHROPIC_REQUEST_TIMEOUT)
 
     prompt = build_blog_prompt(topic, source, recent_titles=recent_titles)
 
-    try:
-        message = client.messages.create(
+    def _request(text_prompt: str, max_tokens: int):
+        return client.messages.create(
             model="claude-haiku-4-5",
-            max_tokens=ANTHROPIC_MAX_TOKENS,
-            messages=[{"role": "user", "content": prompt}]
+            max_tokens=max_tokens,
+            messages=[{"role": "user", "content": text_prompt}]
         )
-    except Exception as e:
-        raise RuntimeError(
-            f'Fehler bei der KI-Generierung (Timeout/Netzwerk). Bitte erneut versuchen oder ANTHROPIC_REQUEST_TIMEOUT erhoehen. Details: {e}'
-        ) from e
 
-    raw = (message.content[0].text if message and message.content else '').strip()
-    try:
-        return parse_ai_json_payload(raw)
-    except Exception:
-        retry_prompt = (
-            prompt
-            + "\n\nWICHTIGER RETRY: Dein vorheriger Output war kein valides JSON. "
-              "Antworte jetzt mit genau EINEM validen JSON-Objekt entsprechend dem Schema, ohne Zusatztext."
-        )
+    attempts = [
+        {
+            'prompt': prompt,
+            'max_tokens': ANTHROPIC_MAX_TOKENS,
+        },
+        {
+            'prompt': prompt + "\n\nWICHTIGER RETRY: Dein vorheriger Output war unvollstaendig oder kein valides JSON. "
+                               "Antworte mit genau EINEM validen JSON-Objekt und allen Pflichtfeldern (inkl. content und faq_json), ohne Zusatztext.",
+            'max_tokens': max(ANTHROPIC_MAX_TOKENS, 4200),
+        },
+        {
+            'prompt': prompt + "\n\nNOTFALL-RETRY: Gib kompaktes, aber vollstaendiges JSON aus (mind. 500 Woerter HTML in content), "
+                               "nur ASCII-Anfuehrungszeichen korrekt escaped, ohne Markdown, ohne Praefix.",
+            'max_tokens': max(ANTHROPIC_MAX_TOKENS, 5200),
+        },
+    ]
+
+    last_raw = ''
+    last_error = None
+    for attempt in attempts:
         try:
-            retry = client.messages.create(
-                model="claude-haiku-4-5",
-                max_tokens=ANTHROPIC_MAX_TOKENS,
-                messages=[{"role": "user", "content": retry_prompt}]
-            )
-            retry_raw = (retry.content[0].text if retry and retry.content else '').strip()
-            return parse_ai_json_payload(retry_raw)
+            message = _request(attempt['prompt'], attempt['max_tokens'])
+            raw = (message.content[0].text if message and message.content else '').strip()
+            last_raw = raw
+            parsed = parse_ai_json_payload(raw)
+            valid, reason = validate_generated_post_payload(parsed)
+            if not valid:
+                raise ValueError(reason)
+            return parsed
         except Exception as e:
-            snippet = (raw[:500] + '...') if len(raw) > 500 else raw
-            raise RuntimeError(
-                f'KI-Antwort konnte nicht als JSON verarbeitet werden. Details: {e}. Rohantwort (gekürzt): {snippet}'
-            ) from e
+            last_error = e
+            continue
+
+    snippet = (last_raw[:500] + '...') if len(last_raw) > 500 else last_raw
+    raise RuntimeError(
+        f'KI-Antwort konnte nicht als JSON verarbeitet werden. Details: {last_error}. Rohantwort (gekürzt): {snippet}'
+    ) from last_error
 
 
 # ──────────────────────────────────────────────
@@ -1151,7 +1190,14 @@ def build_and_store_blog_post(topic: str | None = None) -> dict:
 
     selected_topic = requested_topic or (source['title'] if source else random.choice(unused) if unused else random.choice(BLOG_TOPICS))
 
-    post_data = generate_blog_post(selected_topic, source=source, recent_titles=existing[:12])
+    try:
+        post_data = generate_blog_post(selected_topic, source=source, recent_titles=existing[:12])
+    except Exception:
+        # If source-driven generation fails (e.g., malformed model output), retry with a curated local topic.
+        fallback_topic = requested_topic or random.choice(unused) if unused else random.choice(BLOG_TOPICS)
+        source = None
+        selected_topic = fallback_topic
+        post_data = generate_blog_post(selected_topic, source=None, recent_titles=existing[:12])
     if is_too_similar_topic(post_data.get('title', ''), existing):
         if requested_topic:
             raise RuntimeError('Generierter Titel ist zu aehnlich zu einem bestehenden Beitrag. Bitte ein genaueres Thema angeben.')
