@@ -137,6 +137,14 @@ p { color: var(--text-muted); line-height: 1.8; }
   background: #1ebe5a;
   transform: translateY(-2px);
 }
+.btn-mail {
+  background: #1f8fff;
+  color: #fff;
+}
+.btn-mail:hover {
+  background: #0f7ae6;
+  transform: translateY(-2px);
+}
 .btn-sm { padding: 10px 22px; font-size: 0.85rem; }
 
 /* ══ HEADER / NAV ══ */
