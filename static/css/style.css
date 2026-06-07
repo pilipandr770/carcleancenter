@@ -145,6 +145,17 @@ p { color: var(--text-muted); line-height: 1.8; }
   background: #0f7ae6;
   transform: translateY(-2px);
 }
+.btn-hero-call {
+  background: #000;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.18);
+}
+.btn-hero-call:hover {
+  border-color: #000;
+  background: #111;
+  color: #fff;
+  transform: translateY(-2px);
+}
 .btn-sm { padding: 10px 22px; font-size: 0.85rem; }
 
 /* ══ HEADER / NAV ══ */
@@ -372,7 +383,7 @@ p { color: var(--text-muted); line-height: 1.8; }
 }
 .hero-subtitle {
   font-size: 1.1rem;
-  color: var(--text-muted);
+  color: var(--red-light);
   line-height: 1.7;
   margin-bottom: 40px;
   max-width: 480px;

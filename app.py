@@ -4,9 +4,11 @@ import json
 import re
 import random
 import uuid
+import smtplib
 import requests
 import xml.etree.ElementTree as ET
 from html import unescape
+from email.message import EmailMessage
 from email.utils import parsedate_to_datetime
 from xml.sax.saxutils import escape as xml_escape
 from datetime import datetime
@@ -35,6 +37,12 @@ ANTHROPIC_REQUEST_TIMEOUT = float(os.getenv('ANTHROPIC_REQUEST_TIMEOUT', '55'))
 ANTHROPIC_MAX_TOKENS = int(os.getenv('ANTHROPIC_MAX_TOKENS', '3200'))
 ADMIN_SECRET = os.getenv('ADMIN_SECRET', 'change_this_secret')
 BASE_URL = os.getenv('BASE_URL', '').strip() or 'https://car-clean-center.net'
+SMTP_HOST = os.getenv('SMTP_HOST', '').strip()
+SMTP_PORT = int(os.getenv('SMTP_PORT', '587'))
+SMTP_USER = os.getenv('SMTP_USER', '').strip()
+SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', '')
+SMTP_FROM = os.getenv('SMTP_FROM', '').strip()
+SMTP_USE_TLS = os.getenv('SMTP_USE_TLS', '1').strip().lower() not in {'0', 'false', 'no'}
 
 GALLERY_UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'img', 'gallery')
 CONTENT_UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'img', 'content')
@@ -1371,6 +1379,67 @@ def api_generate_blog():
         return jsonify({'success': True, **result})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+def send_contact_email(payload: dict) -> None:
+    if not SMTP_HOST:
+        raise RuntimeError('SMTP ist nicht konfiguriert (SMTP_HOST fehlt).')
+
+    from_addr = SMTP_FROM or SMTP_USER or BUSINESS['email']
+    to_addr = BUSINESS['email']
+
+    message = EmailMessage()
+    message['Subject'] = f"Neue Terminanfrage: {payload['name']}"
+    message['From'] = from_addr
+    message['To'] = to_addr
+    if payload.get('email'):
+        message['Reply-To'] = payload['email']
+
+    body = (
+        'Neue Anfrage ueber das Kontaktformular\n\n'
+        f"Name: {payload['name']}\n"
+        f"Telefon: {payload['phone']}\n"
+        f"E-Mail: {payload.get('email') or '-'}\n"
+        f"Fahrzeug: {payload.get('car') or '-'}\n"
+        f"Leistung: {payload.get('service') or '-'}\n"
+        f"Nachricht: {payload.get('message') or '-'}\n"
+    )
+    message.set_content(body)
+
+    with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=30) as server:
+        server.ehlo()
+        if SMTP_USE_TLS:
+            server.starttls()
+            server.ehlo()
+        if SMTP_USER:
+            server.login(SMTP_USER, SMTP_PASSWORD)
+        server.send_message(message)
+
+
+@app.route('/api/contact/', methods=['POST'])
+def api_contact():
+    data = request.get_json(silent=True) or {}
+
+    payload = {
+        'name': (data.get('name') or '').strip()[:120],
+        'phone': (data.get('phone') or '').strip()[:80],
+        'email': (data.get('email') or '').strip()[:160],
+        'service': (data.get('service') or '').strip()[:160],
+        'car': (data.get('car') or '').strip()[:160],
+        'message': (data.get('message') or '').strip()[:2000],
+    }
+
+    if not payload['name'] or not payload['phone']:
+        return jsonify({'success': False, 'error': 'Name und Telefon sind erforderlich.'}), 400
+
+    try:
+        send_contact_email(payload)
+    except RuntimeError as e:
+        return jsonify({'success': False, 'error': str(e)}), 503
+    except Exception:
+        return jsonify({'success': False, 'error': 'E-Mail konnte aktuell nicht versendet werden.'}), 500
+
+    return jsonify({'success': True, 'message': 'Anfrage erfolgreich gesendet.'})
 
 
 # ──────────────────────────────────────────────

@@ -150,7 +150,7 @@
 </section>
 
 <script>
-document.getElementById('contactForm').addEventListener('submit', function(e) {
+document.getElementById('contactForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   const alert = document.getElementById('formAlert');
   const name = document.getElementById('name').value.trim();
@@ -161,18 +161,49 @@ document.getElementById('contactForm').addEventListener('submit', function(e) {
     alert.style.display = 'block';
     return;
   }
+
   const service = document.getElementById('service').value;
   const car = document.getElementById('car').value;
   const msg = document.getElementById('message').value;
-  const subject = encodeURIComponent('Terminanfrage - Car Clean Center');
-  const body = encodeURIComponent(
-    `Hallo Car Clean Center,\n\nich moechte einen Termin anfragen.\n\nName: ${name}\nTelefon: ${phone}\nE-Mail: ${document.getElementById('email').value.trim() || '-'}\nFahrzeug: ${car || '-'}\nLeistung: ${service || '-'}\nNachricht: ${msg || '-'}\n`
-  );
-  window.location.href = `mailto:{{ business.email }}?subject=${subject}&body=${body}`;
-  alert.className = 'alert alert-success';
-  alert.textContent = 'Ihre Anfrage wird als E-Mail vorbereitet. Bitte senden Sie die Nachricht in Ihrem E-Mail-Programm ab.';
-  alert.style.display = 'block';
-  this.reset();
+
+  const payload = {
+    name,
+    phone,
+    email: document.getElementById('email').value.trim(),
+    car,
+    service,
+    message: msg
+  };
+
+  try {
+    const response = await fetch('/api/contact/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const result = await response.json().catch(() => ({}));
+
+    if (response.ok && result.success) {
+      alert.className = 'alert alert-success';
+      alert.textContent = 'Vielen Dank. Ihre Anfrage wurde erfolgreich versendet.';
+      alert.style.display = 'block';
+      this.reset();
+      return;
+    }
+
+    const subject = encodeURIComponent('Terminanfrage - Car Clean Center');
+    const body = encodeURIComponent(
+      `Hallo Car Clean Center,\n\nich moechte einen Termin anfragen.\n\nName: ${name}\nTelefon: ${phone}\nE-Mail: ${payload.email || '-'}\nFahrzeug: ${car || '-'}\nLeistung: ${service || '-'}\nNachricht: ${msg || '-'}\n`
+    );
+    window.location.href = `mailto:{{ business.email }}?subject=${subject}&body=${body}`;
+    alert.className = 'alert alert-error';
+    alert.textContent = (result.error || 'Server-E-Mail nicht verfuegbar.') + ' Wir haben Ihr E-Mail-Programm als Fallback geoeffnet.';
+    alert.style.display = 'block';
+  } catch (err) {
+    alert.className = 'alert alert-error';
+    alert.textContent = 'Verbindungsfehler. Bitte versuchen Sie es erneut oder schreiben Sie direkt per E-Mail.';
+    alert.style.display = 'block';
+  }
 });
 </script>
 {% endblock %}
