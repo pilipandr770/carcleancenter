@@ -4,12 +4,11 @@ import json
 import re
 import random
 import uuid
-import smtplib
 import requests
 import xml.etree.ElementTree as ET
 from html import unescape
-from email.message import EmailMessage
 from email.utils import parsedate_to_datetime
+from urllib.parse import quote
 from xml.sax.saxutils import escape as xml_escape
 from datetime import datetime
 from pathlib import Path
@@ -37,12 +36,6 @@ ANTHROPIC_REQUEST_TIMEOUT = float(os.getenv('ANTHROPIC_REQUEST_TIMEOUT', '55'))
 ANTHROPIC_MAX_TOKENS = int(os.getenv('ANTHROPIC_MAX_TOKENS', '3200'))
 ADMIN_SECRET = os.getenv('ADMIN_SECRET', 'change_this_secret')
 BASE_URL = os.getenv('BASE_URL', '').strip() or 'https://car-clean-center.net'
-SMTP_HOST = os.getenv('SMTP_HOST', '').strip()
-SMTP_PORT = int(os.getenv('SMTP_PORT', '587'))
-SMTP_USER = os.getenv('SMTP_USER', '').strip()
-SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', '')
-SMTP_FROM = os.getenv('SMTP_FROM', '').strip()
-SMTP_USE_TLS = os.getenv('SMTP_USE_TLS', '1').strip().lower() not in {'0', 'false', 'no'}
 
 GALLERY_UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'img', 'gallery')
 CONTENT_UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'img', 'content')
@@ -190,7 +183,7 @@ BUSINESS = {
     'whatsapp': 'https://wa.me/491783640234',
     'maps': 'https://g.co/kgs/cdB5F9s',
     'maps_embed': 'https://maps.google.com/maps?q=Uranstrasse+8+65428+Rüsselsheim&output=embed',
-    'hours': 'Mo–Fr nach Vereinbarung',
+    'hours': 'Mo–Fr 9:00–17:00',
     'logo': '/static/img/logo-main.png',
     'owner': 'David Wainer',
     'founded': '2025',
@@ -645,6 +638,7 @@ WICHTIG:
 - Baue immer einen lokalen Kontext für Rüsselsheim am Main, Frankfurt am Main und Rhein-Main ein, wenn es sinnvoll ist.
 - Verlinke im Text mindestens einmal intern auf /leistungen/ und /kontakt/.
 - Füge am Ende einen FAQ-Block mit 4-6 Fragen und Antworten ein, der als JSON-Feld separat zurückgegeben wird.
+- Verwende fuer Oeffnungszeiten und Kontakt-CTA immer: Montag bis Freitag, 9:00 bis 17:00 Uhr.
 {avoid_titles}
 
 Quelle:
@@ -685,6 +679,7 @@ Zusätzliche Anforderungen:
 - Nenne im Text mindestens einmal die Begriffe Autopflege Rüsselsheim, Fahrzeugaufbereitung, Lackpflege und Keramikversiegelung.
 - Verlinke intern auf /leistungen/ und /kontakt/.
 - Füge am Ende einen FAQ-Block mit 4-6 Fragen und Antworten ein, der als JSON-Feld separat zurückgegeben wird.
+- Verwende fuer Oeffnungszeiten und Kontakt-CTA immer: Montag bis Freitag, 9:00 bis 17:00 Uhr.
 {avoid_titles}
 
 JSON-Format (exakt so):
@@ -1139,7 +1134,7 @@ def faq():
         {'q': 'Was ist Innenraum-Detailing?',
          'a': 'Innenraum-Detailing bedeutet eine gruendliche Tiefenreinigung von Sitzen, Teppichen, Verkleidungen und Cockpit fuer ein sichtbar frisches und gepflegtes Fahrzeuginnere.'},
         {'q': 'Welche Öffnungszeiten haben Sie?',
-         'a': 'Wir arbeiten von Montag bis Freitag nach Vereinbarung. Samstag und Sonntag sind Ruhetage.'},
+            'a': 'Wir sind Montag bis Freitag von 9:00 bis 17:00 Uhr fuer Sie da. Samstag und Sonntag sind geschlossen.'},
     ]
     return render_template('faq.html',
                            business=BUSINESS, faqs=faqs,
@@ -1381,39 +1376,21 @@ def api_generate_blog():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-def send_contact_email(payload: dict) -> None:
-    if not SMTP_HOST:
-        raise RuntimeError('SMTP ist nicht konfiguriert (SMTP_HOST fehlt).')
-
-    from_addr = SMTP_FROM or SMTP_USER or BUSINESS['email']
-    to_addr = BUSINESS['email']
-
-    message = EmailMessage()
-    message['Subject'] = f"Neue Terminanfrage: {payload['name']}"
-    message['From'] = from_addr
-    message['To'] = to_addr
-    if payload.get('email'):
-        message['Reply-To'] = payload['email']
-
-    body = (
-        'Neue Anfrage ueber das Kontaktformular\n\n'
-        f"Name: {payload['name']}\n"
-        f"Telefon: {payload['phone']}\n"
-        f"E-Mail: {payload.get('email') or '-'}\n"
-        f"Fahrzeug: {payload.get('car') or '-'}\n"
-        f"Leistung: {payload.get('service') or '-'}\n"
-        f"Nachricht: {payload.get('message') or '-'}\n"
-    )
-    message.set_content(body)
-
-    with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=30) as server:
-        server.ehlo()
-        if SMTP_USE_TLS:
-            server.starttls()
-            server.ehlo()
-        if SMTP_USER:
-            server.login(SMTP_USER, SMTP_PASSWORD)
-        server.send_message(message)
+def build_contact_whatsapp_url(payload: dict) -> str:
+    whatsapp_number = re.sub(r'\D', '', BUSINESS['phone'])
+    lines = [
+        'Hallo Car Clean Center,',
+        '',
+        'ich moechte einen Termin anfragen.',
+        '',
+        f"Name: {payload['name']}",
+        f"Telefon: {payload['phone']}",
+        f"E-Mail: {payload.get('email') or '-'}",
+        f"Fahrzeug: {payload.get('car') or '-'}",
+        f"Leistung: {payload.get('service') or '-'}",
+        f"Nachricht: {payload.get('message') or '-'}",
+    ]
+    return f"https://wa.me/{whatsapp_number}?text={quote(chr(10).join(lines))}"
 
 
 @app.route('/api/contact/', methods=['POST'])
@@ -1432,14 +1409,11 @@ def api_contact():
     if not payload['name'] or not payload['phone']:
         return jsonify({'success': False, 'error': 'Name und Telefon sind erforderlich.'}), 400
 
-    try:
-        send_contact_email(payload)
-    except RuntimeError as e:
-        return jsonify({'success': False, 'error': str(e)}), 503
-    except Exception:
-        return jsonify({'success': False, 'error': 'E-Mail konnte aktuell nicht versendet werden.'}), 500
-
-    return jsonify({'success': True, 'message': 'Anfrage erfolgreich gesendet.'})
+    return jsonify({
+        'success': True,
+        'message': 'WhatsApp-Link erfolgreich erstellt.',
+        'whatsapp_url': build_contact_whatsapp_url(payload),
+    })
 
 
 # ──────────────────────────────────────────────
@@ -1600,7 +1574,7 @@ Rüsselsheim liegt im direkten Einzugsgebiet von Frankfurt am Main und ist Teil 
 - **E-Mail:** info@car-clean-center.net
 - **Website:** {base_url}
 - **WhatsApp:** https://wa.me/491783640234
-- **Öffnungszeiten:** Montag–Freitag nach Vereinbarung, Samstag/Sonntag geschlossen
+- **Öffnungszeiten:** Montag–Freitag 9:00–17:00 Uhr, Samstag/Sonntag geschlossen
 
 ## Dienstleistungen
 

@@ -663,7 +663,7 @@ p { color: var(--text-muted); line-height: 1.8; }
 }
 .package-price {
   font-size: 1.8rem;
-  color: #fff;
+  color: var(--red);
   font-weight: 900;
   margin: 2px 0;
 }
@@ -1345,7 +1345,7 @@ select.form-control { cursor: pointer; }
 .price-table tr:last-child td { border-bottom: none; }
 .price-table tr:hover td { background: var(--bg3); }
 .price-table td:first-child { color: var(--text); font-weight: 600; }
-.price-table td:last-child { color: var(--gold); font-weight: 700; font-family: var(--font-head); }
+.price-table td:last-child { color: var(--red); font-weight: 700; font-family: var(--font-head); }
 .price-section { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 24px; }
 .price-section-header { padding: 20px 24px; background: var(--bg3); border-bottom: 1px solid var(--border); }
 .price-section-title { font-family: var(--font-head); font-size: 1.1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text); }
@@ -1673,7 +1673,7 @@ select.form-control { cursor: pointer; }
     margin-top: 10px;
     font-size: 1.05rem;
     letter-spacing: 0.01em;
-    color: var(--gold);
+    color: var(--red);
     white-space: nowrap;
   }
   .price-section-header {
