@@ -184,6 +184,15 @@ document.getElementById('contactForm').addEventListener('submit', async function
     const result = await response.json().catch(() => ({}));
 
     if (response.ok && result.success && result.whatsapp_url) {
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', 'contact_form_submit_success', {
+          send_to: 'AW-18215954453',
+          event_category: 'lead',
+          event_label: service || 'not_selected',
+          page_path: window.location.pathname || '/kontakt/',
+        });
+      }
+
       alert.className = 'alert alert-success';
       alert.textContent = 'Ihre Anfrage wird jetzt in WhatsApp geöffnet.';
       alert.style.display = 'block';

@@ -1,6 +1,17 @@
 // Car Clean Center – Main JS
 
 document.addEventListener('DOMContentLoaded', () => {
+  const ADS_ACCOUNT_ID = 'AW-18215954453';
+
+  const trackAdsEvent = (eventName, params = {}) => {
+    if (typeof window.gtag !== 'function') return;
+    window.gtag('event', eventName, {
+      send_to: ADS_ACCOUNT_ID,
+      page_path: window.location.pathname || '/',
+      ...params,
+    });
+  };
+
   // ── CONSENT MANAGEMENT ──
   const CONSENT_KEY = 'ccc_cookie_consent_v1';
   const cookieBanner = document.getElementById('cookieBanner');
@@ -136,6 +147,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeConsentModal();
+  });
+
+  // ── ADS EVENT TRACKING ──
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('a[href]');
+    if (!link) return;
+
+    const rawHref = (link.getAttribute('href') || '').trim();
+    const resolvedHref = link.href || rawHref;
+    if (!rawHref) return;
+
+    if (rawHref.startsWith('tel:')) {
+      trackAdsEvent('click_to_call', {
+        event_category: 'lead',
+        event_label: rawHref,
+        link_url: resolvedHref,
+      });
+      return;
+    }
+
+    if (rawHref.startsWith('mailto:')) {
+      trackAdsEvent('click_email', {
+        event_category: 'lead',
+        event_label: rawHref,
+        link_url: resolvedHref,
+      });
+      return;
+    }
+
+    if (/wa\.me|whatsapp\.com/i.test(resolvedHref) || link.classList.contains('whatsapp')) {
+      trackAdsEvent('click_whatsapp', {
+        event_category: 'lead',
+        event_label: resolvedHref,
+        link_url: resolvedHref,
+      });
+    }
   });
 
   // ── HEADER SCROLL ──
